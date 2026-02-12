@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ recipe.title }} - Food Recipes{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h1>{{ recipe.title }}</h1>
+        <p class="text-muted">
+            By {{ recipe.creator.username }} | 
+            Category: <a href="?category={{ recipe.category.slug }}">{{ recipe.category.name }}</a> |
+            {{ recipe.created_at|date:"M d, Y" }}
+        </p>
+        
+        {% if recipe.featured_image %}
+        <img src="{{ recipe.featured_image.url }}" class="img-fluid rounded mb-4" alt="{{ recipe.title }}">
+        {% endif %}
+        
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5>Description</h5>
+                <p>{{ recipe.description }}</p>
+            </div>
+        </div>
+        
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="fas fa-clock fa-2x text-success"></i>
+                        <h6>Prep Time</h6>
+                        <p class="h5">{{ recipe.prep_time }} mins</p>
+                    </div>
+                </div>
+            </div>
+            {% if recipe.cook_time %}
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="fas fa-fire fa-2x text-success"></i>
+                        <h6>Cook Time</h6>
+                        <p class="h5">{{ recipe.cook_time }} mins</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="fas fa-users fa-2x text-success"></i>
+                        <h6>Servings</h6>
+                        <p class="h5">{{ recipe.servings }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">Ingredients</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled">
+                            {% for ingredient in recipe.ingredients.all %}
+                            <li class="mb-2">
+                                {{ ingredient.quantity }} {{ ingredient.unit }} {{ ingredient.name }}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">Steps</h5>
+                    </div>
+                    <div class="card-body">
+                        <ol class="list-group list-group-numbered">
+                            {% for step in recipe.steps.all %}
+                            <li class="list-group-item border-0">{{ step.description }}</li>
+                            {% endfor %}
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Sidebar - for later -->
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">More Recipes</h5>
+            </div>
+            <div class="card-body">
+                <p>Coming soon...</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

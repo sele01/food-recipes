@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}Recipes - Food Recipes{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Categories Sidebar -->
+    <div class="col-md-3">
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Categories</h5>
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="{% url 'recipes:recipe_list' %}" class="list-group-item list-group-item-action">
+                    All Recipes
+                </a>
+                {% for category in categories %}
+                <a href="?category={{ category.slug }}" class="list-group-item list-group-item-action">
+                    {{ category.name }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recipe Grid -->
+    <div class="col-md-9">
+        <h2 class="mb-4">Recipes</h2>
+        <div class="row">
+            {% for recipe in recipes %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    {% if recipe.featured_image %}
+                    <img src="{{ recipe.featured_image.url }}" class="card-img-top" alt="{{ recipe.title }}">
+                    {% else %}
+                    <div class="card-img-top bg-light text-center py-5">
+                        <i class="fas fa-utensils fa-3x text-secondary"></i>
+                    </div>
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ recipe.title }}</h5>
+                        <p class="card-text text-muted small">
+                            <i class="far fa-clock"></i> {{ recipe.prep_time }} mins
+                            {% if recipe.cook_time %} + {{ recipe.cook_time }} mins{% endif %}
+                        </p>
+                        <p class="card-text">{{ recipe.description|truncatewords:20 }}</p>
+                        <a href="{% url 'recipes:recipe_detail' recipe.slug %}" class="btn btn-success btn-sm">View Recipe</a>
+                    </div>
+                    <div class="card-footer text-muted">
+                        By {{ recipe.creator.username }}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <p class="text-center">No recipes found.</p>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

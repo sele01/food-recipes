@@ -7,7 +7,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('allauth.urls')),
     path('__debug__/', include('debug_toolbar.urls')),
-    path('', include('core.urls')) # We'll add core and recipes URLs later
+    path('', include('core.urls')) ,# We'll add core and recipes URLs later
+    path('recipes/', include('recipes.urls')),
 ]
 
 if settings.DEBUG:
