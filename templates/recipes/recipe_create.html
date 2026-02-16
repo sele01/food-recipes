@@ -1,0 +1,135 @@
+{% extends 'base.html' %} {% load crispy_forms_tags %} {% block title %}Create
+Recipe - Food Recipes{% endblock %} {% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header bg-success text-white">
+        <h4 class="mb-0">Create New Recipe</h4>
+      </div>
+      <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+
+          <h5>Basic Information</h5>
+          {{ form|crispy }}
+
+          <hr />
+
+          <h5>Ingredients</h5>
+          <div id="ingredients-formset">
+            {{ ingredient_formset.management_form }} {% for form in
+            ingredient_formset %}
+            <div class="ingredient-form border p-3 mb-3">{{ form|crispy }}</div>
+            {% endblock %}
+          </div>
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-success mb-3"
+            id="add-ingredient"
+          >
+            <i class="fas fa-plus"></i> Add Ingredient
+          </button>
+
+          <hr />
+
+          <h5>Steps</h5>
+          <div id="steps-formset">
+            {{ step_formset.management_form }} {% for form in step_formset %}
+            <div class="step-form border p-3 mb-3">{{ form|crispy }}</div>
+            {% endfor %}
+          </div>
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-success mb-3"
+            id="add-step"
+          >
+            <i class="fas fa-plus"></i> Add Step
+          </button>
+
+          <hr />
+
+          <button type="submit" class="btn btn-success">Create Recipe</button>
+          <a href="{% url 'recipes:recipe_list' %}" class="btn btn-secondary"
+            >Cancel</a
+          >
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% block extra_js %}
+<script>
+  document
+    .getElementById("add-ingredient")
+    .addEventListener("click", function (e) {
+      e.preventDefault();
+
+      // Get the formset container and management form
+      var formsetDiv = document.getElementById("ingredients-formset");
+      var totalForms = document.getElementById("id_ingredients-TOTAL_FORMS");
+
+      // Get current number of forms
+      var formCount = parseInt(totalForms.value);
+
+      // Clone the first ingredient form
+      var newForm = document.querySelector(".ingredient-form").cloneNode(true);
+
+      // Update all IDs and names in the new form
+      newForm.innerHTML = newForm.innerHTML.replace(
+        /ingredients-(\d+)-/g,
+        "ingredients-" + formCount + "-",
+      );
+      newForm.innerHTML = newForm.innerHTML.replace(
+        /id_ingredients-(\d+)-/g,
+        "id_ingredients-" + formCount + "-",
+      );
+
+      // Clear all input values
+      newForm
+        .querySelectorAll("input, select, textarea")
+        .forEach(function (field) {
+          if (field.type !== "hidden") {
+            field.value = "";
+          }
+        });
+
+      // Append the new form
+      formsetDiv.appendChild(newForm);
+
+      // Increment the total forms count
+      totalForms.value = formCount + 1;
+    });
+
+  // Same for steps
+  document.getElementById("add-step").addEventListener("click", function (e) {
+    e.preventDefault();
+
+    var formsetDiv = document.getElementById("steps-formset");
+    var totalForms = document.getElementById("id_steps-TOTAL_FORMS");
+    var formCount = parseInt(totalForms.value);
+
+    var newForm = document.querySelector(".step-form").cloneNode(true);
+
+    newForm.innerHTML = newForm.innerHTML.replace(
+      /steps-(\d+)-/g,
+      "steps-" + formCount + "-",
+    );
+    newForm.innerHTML = newForm.innerHTML.replace(
+      /id_steps-(\d+)-/g,
+      "id_steps-" + formCount + "-",
+    );
+
+    newForm
+      .querySelectorAll("input, select, textarea")
+      .forEach(function (field) {
+        if (field.type !== "hidden") {
+          field.value = "";
+        }
+      });
+
+    formsetDiv.appendChild(newForm);
+    totalForms.value = formCount + 1;
+  });
+</script>
+{% endblock %}

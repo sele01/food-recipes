@@ -133,3 +133,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Debug Toolbar
 INTERNAL_IPS = ['127.0.0.1']
+# Disable password validation during development
+AUTH_PASSWORD_VALIDATORS = []
+# Email settings for development
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

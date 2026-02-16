@@ -32,6 +32,20 @@ class Recipe(models.Model):
     
     def __str__(self):
         return self.title
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            from django.utils.text import slugify
+            self.slug = slugify(self.title)
+            
+            # Ensure uniqueness
+            original_slug = self.slug
+            counter = 1
+            while Recipe.objects.filter(slug=self.slug).exists():
+                self.slug = f"{original_slug}-{counter}"
+                counter += 1
+    
+        super().save(*args, **kwargs)
 
 class RecipeImage(models.Model):
     """Multiple images for a recipe"""
