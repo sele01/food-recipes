@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.text import slugify
-from .models import Category, Recipe, RecipeImage, Ingredient, Step, Comment, Like
+from .models import Category, Recipe, RecipeImage, Ingredient, Step, Comment, Like, Bookmark, Rating
 
 
 class RecipeImageInline(admin.TabularInline):
@@ -55,4 +55,14 @@ class CommentAdmin(admin.ModelAdmin):
 @admin.register(Like)
 class LikeAdmin(admin.ModelAdmin):
     list_display = ["recipe", "user", "created_at"]
+    list_filter = ["created_at"]
+
+@admin.register(Bookmark)
+class BookmarkAdmin(admin.ModelAdmin):
+    list_display = ["recipe", "user", "created_at"]
+    list_filter = ["created_at"]
+
+@admin.register(Rating)
+class RatingAdmin(admin.ModelAdmin):
+    list_display = ["recipe", "user", "value", "created_at"]
     list_filter = ["created_at"]

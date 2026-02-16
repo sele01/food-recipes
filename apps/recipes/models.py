@@ -54,6 +54,17 @@ class Recipe(models.Model):
 
         super().save(*args, **kwargs)
 
+    @property
+    def average_rating(self):
+        ratings = self.ratings.all()
+        if ratings:
+            return sum(r.value for r in ratings) / len(ratings)
+        return 0
+
+    @property
+    def rating_count(self):
+        return self.ratings.count()
+
 
 class RecipeImage(models.Model):
     """Multiple images for a recipe"""
@@ -119,18 +130,44 @@ class Comment(models.Model):
     def __str__(self):
         return f"Comment by {self.user.username} on {self.recipe.title}"
 
+
 # Like model to track user likes on recipes
 class Like(models.Model):
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name='likes')
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name="likes")
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         unique_together = ["recipe", "user"]  # one like per user per recipe
 
+    def __str__(self):
+        return f"{self.user.username} likes {self.recipe.title}"  # Add user field to Like model
+
+
+class Bookmark(models.Model):
+    recipe = models.ForeignKey(
+        Recipe, on_delete=models.CASCADE, related_name="bookmarks"
+    )
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ["recipe", "user"]  # one bookmark per user per recipe
 
     def __str__(self):
-        return f"{self.user.username} likes {self.recipe.title}" # Add user field to Like model
+        return f"{self.user.username} bookmarked {self.recipe.title}"
 
 
-                                            
+class Rating(models.Model):
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name="ratings")
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    value = models.IntegerField(
+        choices=[(i, i) for i in range(1, 6)]
+    )  # rating value (e.g., 1-5)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ["recipe", "user"]  # one rating per user per recipe
+
+    def __str__(self):
+        return f"{self.user.username} rated {self.recipe.title}: {self.value}*"

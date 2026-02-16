@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}My Saved Recipes - Food Recipes{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">My Saved Recipes</h2>
+
+<div class="row">
+    {% for bookmark in bookmarks %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            {% if bookmark.recipe.featured_image %}
+            <img src="{{ bookmark.recipe.featured_image.url }}" class="card-img-top" alt="{{ bookmark.recipe.title }}">
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ bookmark.recipe.title }}</h5>
+                <p class="card-text text-muted">
+                    <i class="fas fa-clock"></i> {{ bookmark.recipe.prep_time }} mins |
+                    <i class="fas fa-star"></i> {{ bookmark.recipe.average_rating|floatformat:1 }}
+                </p>
+                <a href="{% url 'recipes:recipe_detail' bookmark.recipe.slug %}" class="btn btn-success btn-sm">View Recipe</a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            You haven't saved any recipes yet. <a href="{% url 'recipes:recipe_list' %}">Browse recipes</a> to save some!
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

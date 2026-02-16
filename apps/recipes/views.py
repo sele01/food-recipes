@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404
 from django.views.generic import ListView, DetailView
-from .models import Recipe, Ingredient, Step, RecipeImage, Category
+from .models import Recipe, Ingredient, Step, RecipeImage, Category, Like, Comment, Bookmark, Rating
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
@@ -137,3 +137,42 @@ def add_comment(request, recipe_id):
         messages.error(request, "Comment cannot be empty.")
 
     return redirect("recipes:recipe_detail", slug=recipe.slug)
+
+
+@login_required
+def toggle_bookmark(request, recipe_id):
+    recipe = get_object_or_404(Recipe, id=recipe_id)
+    bookmark = Bookmark.objects.filter(recipe=recipe, user=request.user)
+
+    if bookmark.exists():
+        bookmark.delete()
+    else:
+        Bookmark.objects.create(recipe=recipe, user=request.user)
+
+    return redirect("recipes:recipe_detail", slug=recipe.slug)
+
+# Rating view to handle user ratings on recipes
+@login_required
+def rate_recipe(request, recipe_id):
+    recipe = get_object_or_404(Recipe, id=recipe_id)
+    value = request.POST.get("value")
+
+    if value:
+        rating, created = Rating.objects.get_or_create(
+            recipe=recipe, user=request.user, defaults={"value": value}
+        )
+
+    return redirect("recipes:recipe_detail", slug=recipe.slug)
+
+class BookmarkListView(LoginRequiredMixin, ListView):
+    model = Bookmark
+    template_name = "recipes/bookmarks.html"
+    context_object_name = "bookmarks"
+
+    def get_queryset(self):
+        return Bookmark.objects.filter(user=self.request.user).select_related("recipe")
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["recipes"] = [bookmark.recipe for bookmark in context["bookmarks"]]
+        return context
