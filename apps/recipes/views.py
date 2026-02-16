@@ -9,6 +9,12 @@ from .forms import RecipeForm, IngredientForm, StepForm
 from django.forms import inlineformset_factory
 
 
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect
+from .models import Like, Comment
+from django.contrib import messages
+
+
 class RecipeListView(ListView):
     model = Recipe
     template_name = "recipes/recipe_list.html"
@@ -47,7 +53,7 @@ class RecipeCreateView(LoginRequiredMixin, CreateView):
         "title",
         "description",
         "category",
-        "prep_time", 
+        "prep_time",
         "cook_time",
         "servings",
         "featured_image",
@@ -56,37 +62,43 @@ class RecipeCreateView(LoginRequiredMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        
+
         # Create formsets
         IngredientFormSet = inlineformset_factory(
-            Recipe, Ingredient, 
-            fields=['name', 'quantity', 'unit'],
+            Recipe,
+            Ingredient,
+            fields=["name", "quantity", "unit"],
             extra=3,
-            can_delete=True
+            can_delete=True,
         )
-        
+
         StepFormSet = inlineformset_factory(
-            Recipe, Step,
-            fields=['step_number', 'description'],
+            Recipe,
+            Step,
+            fields=["step_number", "description"],
             extra=3,
-            can_delete=True
+            can_delete=True,
         )
-        
+
         if self.request.POST:
-            context['ingredient_formset'] = IngredientFormSet(self.request.POST, instance=self.object)
-            context['step_formset'] = StepFormSet(self.request.POST, instance=self.object)
+            context["ingredient_formset"] = IngredientFormSet(
+                self.request.POST, instance=self.object
+            )
+            context["step_formset"] = StepFormSet(
+                self.request.POST, instance=self.object
+            )
         else:
-            context['ingredient_formset'] = IngredientFormSet(instance=self.object)
-            context['step_formset'] = StepFormSet(instance=self.object)
-            
+            context["ingredient_formset"] = IngredientFormSet(instance=self.object)
+            context["step_formset"] = StepFormSet(instance=self.object)
+
         return context
 
     def form_valid(self, form):
         form.instance.creator = self.request.user
         context = self.get_context_data()
-        ingredient_formset = context['ingredient_formset']
-        step_formset = context['step_formset']
-        
+        ingredient_formset = context["ingredient_formset"]
+        step_formset = context["step_formset"]
+
         if ingredient_formset.is_valid() and step_formset.is_valid():
             self.object = form.save()
             ingredient_formset.instance = self.object
@@ -99,3 +111,29 @@ class RecipeCreateView(LoginRequiredMixin, CreateView):
 
     def get_success_url(self):
         return reverse_lazy("recipes:recipe_list")
+
+
+@login_required
+def toggle_like(request, recipe_id):
+    recipe = get_object_or_404(Recipe, id=recipe_id)
+    like = Like.objects.filter(recipe=recipe, user=request.user)
+
+    if like.exists():
+        like.delete()
+    else:
+        Like.objects.create(recipe=recipe, user=request.user)
+
+    return redirect("recipes:recipe_detail", slug=recipe.slug)
+
+
+@login_required
+def add_comment(request, recipe_id):
+    recipe = get_object_or_404(Recipe, id=recipe_id)
+    content = request.POST.get("content")
+
+    if content:
+        Comment.objects.create(recipe=recipe, user=request.user, content=content)
+    else:
+        messages.error(request, "Comment cannot be empty.")
+
+    return redirect("recipes:recipe_detail", slug=recipe.slug)
