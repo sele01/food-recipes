@@ -7,11 +7,13 @@
     <div class="col-md-8">
         <h1>{{ recipe.title }}</h1>
         <p class="text-muted">
-            By {{ recipe.creator.username }} | 
-            Category: <a href="?category={{ recipe.category.slug }}">{{ recipe.category.name }}</a> |
-            {{ recipe.created_at|date:"M d, Y" }}
-        </p>
-        
+        By <a href="{% url 'accounts:profile' recipe.creator.username %}" class="text-success">
+            {{ recipe.creator.username }}
+        </a> | 
+        Category: <a href="?category={{ recipe.category.slug }}">{{ recipe.category.name }}</a> |
+        {{ recipe.created_at|date:"M d, Y" }}
+    </p>
+            
         {% if recipe.featured_image %}
         <img src="{{ recipe.featured_image.url }}" class="img-fluid rounded mb-4" alt="{{ recipe.title }}">
         {% endif %}

@@ -1,0 +1,102 @@
+{% extends 'base.html' %} {% block title %}{{ profile_user.username }}'s Profile
+- Food Recipes{% endblock %} {% block content %}
+<div class="row">
+  <div class="col-md-4">
+    <!-- Profile Card -->
+    <div class="card">
+      <div class="card-body text-center">
+        {% if profile_user.profile_picture %}
+        <img
+          src="{{ profile_user.profile_picture.url }}"
+          class="rounded-circle img-fluid mb-3"
+          style="width: 150px; height: 150px; object-fit: cover"
+        />
+        {% else %}
+        <div
+          class="bg-secondary rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+          style="width: 150px; height: 150px"
+        >
+          <i class="fas fa-user fa-4x text-white"></i>
+        </div>
+        {% endif %}
+
+        <h3>{{ profile_user.username }}</h3>
+
+        {% if profile_user.first_name or profile_user.last_name %}
+        <p class="text-muted">
+          {{ profile_user.first_name }} {{ profile_user.last_name }}
+        </p>
+        {% endif %} {% if profile_user.bio %}
+        <p class="mt-3">{{ profile_user.bio }}</p>
+        {% endif %} {% if profile_user.website %}
+        <a
+          href="{{ profile_user.website }}"
+          target="_blank"
+          class="btn btn-outline-success btn-sm"
+        >
+          <i class="fas fa-globe"></i> Website
+        </a>
+        {% endif %}
+
+        <!-- Stats -->
+        <div class="row mt-4">
+          <div class="col-4">
+            <h5>{{ total_recipes }}</h5>
+            <small class="text-muted">Recipes</small>
+          </div>
+          <div class="col-4">
+            <h5>{{ total_likes_received }}</h5>
+            <small class="text-muted">Likes</small>
+          </div>
+          <div class="col-4">
+            <h5>{{ profile_user.created_at|date:"M Y" }}</h5>
+            <small class="text-muted">Member since</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-8">
+    <!-- User's Recipes -->
+    <div class="card">
+      <div class="card-header bg-success text-white">
+        <h5 class="mb-0">Recipes by {{ profile_user.username }}</h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          {% for recipe in recipes %}
+          <div class="col-md-6 mb-3">
+            <div class="card h-100">
+              {% if recipe.featured_image %}
+              <img
+                src="{{ recipe.featured_image.url }}"
+                class="card-img-top"
+                style="height: 150px; object-fit: cover"
+              />
+              {% endif %}
+              <div class="card-body">
+                <h6 class="card-title">{{ recipe.title }}</h6>
+                <p class="card-text small">
+                  <i class="fas fa-clock"></i> {{ recipe.prep_time }} mins |
+                  <i class="fas fa-heart"></i> {{ recipe.likes.count }}
+                </p>
+                <a
+                  href="{% url 'recipes:recipe_detail' recipe.slug %}"
+                  class="btn btn-success btn-sm"
+                  >View</a
+                >
+              </div>
+            </div>
+          </div>
+          {% empty %}
+          <div class="col-12">
+            <p class="text-muted">No recipes yet.</p>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

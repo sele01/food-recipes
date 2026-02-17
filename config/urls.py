@@ -5,7 +5,8 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('accounts/', include('allauth.urls')),
+    path('accounts/', include('allauth.urls')),  # For django-allauth
+    path('accounts/', include('accounts.urls')),
     path('__debug__/', include('debug_toolbar.urls')),
     path('', include('core.urls')) ,# We'll add core and recipes URLs later
     path('recipes/', include('recipes.urls')),
