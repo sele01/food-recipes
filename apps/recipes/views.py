@@ -1,6 +1,16 @@
 from django.shortcuts import render, get_object_or_404
 from django.views.generic import ListView, DetailView
-from .models import Recipe, Ingredient, Step, RecipeImage, Category, Like, Comment, Bookmark, Rating
+from .models import (
+    Recipe,
+    Ingredient,
+    Step,
+    RecipeImage,
+    Category,
+    Like,
+    Comment,
+    Bookmark,
+    Rating,
+)
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
@@ -14,6 +24,8 @@ from django.shortcuts import redirect
 from .models import Like, Comment
 from django.contrib import messages
 
+from django.db.models import Q
+
 
 class RecipeListView(ListView):
     model = Recipe
@@ -25,15 +37,41 @@ class RecipeListView(ListView):
         queryset = Recipe.objects.filter(is_published=True)
 
         # filter by category if selected
+        # search by title
+        search_query = self.request.GET.get("search", "")
+        if search_query:
+            queryset = queryset.filter(
+                Q(title__icontains=search_query)
+                | Q(description__icontains=search_query)
+            )
+        # filter by category if selected
         category_slug = self.request.GET.get("category")
         if category_slug:
             queryset = queryset.filter(category__slug=category_slug)
+
+        # filter by prep time(max minutes)
+        max_time = self.request.GET.get("max_time")
+        if max_time:
+            queryset = queryset.filter(prep_time__lte=max_time)
+
+        # filter by ingredient
+        ingredient = self.request.GET.get("ingredient")
+        if ingredient:
+            queryset = queryset.filter(
+                ingredients__name__icontains=ingredient
+            ).distinct()
 
         return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["categories"] = Category.objects.all()
+
+        # pass search parameters to template for pagination links
+        context["search_query"] = self.request.GET.get("search", "")
+        context["selected_category"] = self.request.GET.get("category", "")
+        context["max_time"] = self.request.GET.get("max_time", "")
+        context["ingredient"] = self.request.GET.get("ingredient", "")
 
         return context
 
@@ -151,6 +189,7 @@ def toggle_bookmark(request, recipe_id):
 
     return redirect("recipes:recipe_detail", slug=recipe.slug)
 
+
 # Rating view to handle user ratings on recipes
 @login_required
 def rate_recipe(request, recipe_id):
@@ -164,6 +203,7 @@ def rate_recipe(request, recipe_id):
 
     return redirect("recipes:recipe_detail", slug=recipe.slug)
 
+
 class BookmarkListView(LoginRequiredMixin, ListView):
     model = Bookmark
     template_name = "recipes/bookmarks.html"
@@ -171,7 +211,7 @@ class BookmarkListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         return Bookmark.objects.filter(user=self.request.user).select_related("recipe")
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["recipes"] = [bookmark.recipe for bookmark in context["bookmarks"]]
