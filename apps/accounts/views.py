@@ -4,6 +4,7 @@ from django.views.generic import DetailView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from .models import CustomUser
+from notifications.models import Activity
 
 
 User = get_user_model()
@@ -28,6 +29,12 @@ class ProfileView(DetailView):
         context["total_recipes"] = user.recipes.count()
         context["total_likes_received"] = sum(
             recipe.likes.count() for recipe in user.recipes.all()
+        )
+        # Get user's recent activity (public)
+        context["activities"] = (
+            Activity.objects.filter(actor=user)
+            .exclude(verb="follow")  # Keep follows private
+            .select_related("target_content_type")[:20]
         )
 
         return context

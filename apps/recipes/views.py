@@ -27,6 +27,10 @@ from django.contrib import messages
 from django.db.models import Q
 
 
+from django.contrib.contenttypes.models import ContentType
+from notifications.models import Activity
+
+
 class RecipeListView(ListView):
     model = Recipe
     template_name = "recipes/recipe_list.html"
@@ -143,6 +147,12 @@ class RecipeCreateView(LoginRequiredMixin, CreateView):
             step_formset.instance = self.object
             ingredient_formset.save()
             step_formset.save()
+            Activity.objects.create(
+                actor=self.request.user,
+                verb="create",
+                target=self.object,
+                recipient=None,  # Public creation, no specific recipient
+            )
             return super().form_valid(form)
         else:
             return self.form_invalid(form)
@@ -170,7 +180,14 @@ def add_comment(request, recipe_id):
     content = request.POST.get("content")
 
     if content:
-        Comment.objects.create(recipe=recipe, user=request.user, content=content)
+        comment = Comment.objects.create(recipe=recipe, user=request.user, content=content)
+        # CREATE ACTIVITY
+        Activity.objects.create(
+            actor=request.user,
+            verb="comment",
+            target=comment,  # Point to the comment itself
+            recipient=recipe.creator,  # Notify recipe owner
+        )
     else:
         messages.error(request, "Comment cannot be empty.")
 
@@ -216,3 +233,26 @@ class BookmarkListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context["recipes"] = [bookmark.recipe for bookmark in context["bookmarks"]]
         return context
+
+
+@login_required
+def toggle_like(request, recipe_id):
+    recipe = get_object_or_404(Recipe, id=recipe_id)
+    like = Like.objects.filter(recipe=recipe, user=request.user)
+    if like.exists():
+        like.delete()
+
+        Activity.objects.filter(
+            target_content_type=ContentType.objects.get_for_model(recipe),
+            target_object_id=recipe.id,
+            actor=request.user,
+            verb="like",
+        ).delete()
+    else:
+        Like.objects.create(recipe=recipe, user=request.user)
+
+        Activity.objects.create(
+            actor=request.user, verb="like", target=recipe, recipient=recipe.creator
+        )
+
+    return redirect("recipes:recipe_detail", slug=recipe.slug)

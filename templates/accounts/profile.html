@@ -99,4 +99,37 @@
     </div>
   </div>
 </div>
+    <!-- Activity Feed Section -->
+    <div class="card mt-4">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">Recent Activity</h5>
+        </div>
+        <div class="card-body">
+            {% for activity in activities %}
+            <div class="mb-2">
+                <strong>{{ activity.actor.username }}</strong>
+                {% if activity.verb == 'create' %}
+                    created recipe 
+                    <a href="{% url 'recipes:recipe_detail' activity.target.slug %}">
+                        "{{ activity.target.title }}"
+                    </a>
+                {% elif activity.verb == 'like' %}
+                    liked recipe 
+                    <a href="{% url 'recipes:recipe_detail' activity.target.slug %}">
+                        "{{ activity.target.title }}"
+                    </a>
+                {% elif activity.verb == 'comment' %}
+                    commented on 
+                    <a href="{% url 'recipes:recipe_detail' activity.target.recipe.slug %}">
+                        "{{ activity.target.recipe.title }}"
+                    </a>
+                {% endif %}
+                <small class="text-muted">{{ activity.timestamp|timesince }} ago</small>
+            </div>
+            {% empty %}
+            <p class="text-muted">No recent activity.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>  <!-- This closes the col-md-8 div -->
 {% endblock %}

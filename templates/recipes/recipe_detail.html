@@ -92,85 +92,79 @@
         </div>
         
         <!-- Rating, Like, Bookmark Section -->
-        <div class="card mt-4">
-            <div class="card-header bg-success text-white">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <span class="me-3">
-                            <i class="fas fa-heart"></i> {{ recipe.likes.count }}
-                        </span>
-                        <span class="me-3">
-                            <i class="fas fa-star"></i> 
-                            {{ recipe.average_rating|floatformat:1 }} ({{ recipe.rating_count }})
-                        </span>
-                        <span>
-                            <i class="fas fa-bookmark"></i> {{ recipe.bookmarks.count }}
-                        </span>
-                    </div>
-                    {% if user.is_authenticated %}
-                    <div>
-                        <!-- Like Button -->
-                        <form method="post" action="{% url 'recipes:toggle_like' recipe.id %}" class="d-inline">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-sm btn-outline-light">
-                                {% if user in recipe.likes.all %}
-                                    <i class="fas fa-heart"></i> Unlike
-                                {% else %}
-                                    <i class="far fa-heart"></i> Like
-                                {% endif %}
-                            </button>
-                        </form>
-                        
-                        <!-- Bookmark Button -->
-                        <form method="post" action="{% url 'recipes:toggle_bookmark' recipe.id %}" class="d-inline ms-2">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-sm btn-outline-light">
-                                {% if user in recipe.bookmarks.all %}
-                                    <i class="fas fa-bookmark"></i> Saved
-                                {% else %}
-                                    <i class="far fa-bookmark"></i> Save
-                                {% endif %}
-                            </button>
-                        </form>
-                    </div>
-                    {% endif %}
-                </div>
+<div class="card mt-4">
+    <div class="card-header bg-success text-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <span class="me-3">
+                    <i class="fas fa-heart"></i> {{ recipe.likes.count }}
+                </span>
+                <span class="me-3">
+                    <i class="fas fa-star"></i> 
+                    {{ recipe.average_rating|floatformat:1 }} ({{ recipe.rating_count }})
+                </span>
+                <span>
+                    <i class="fas fa-bookmark"></i> {{ recipe.bookmarks.count }}
+                </span>
             </div>
-        </div>
-
-        <!-- Rating Section -->
-        {% if user.is_authenticated %}
-        <div class="card mt-4">
-            <div class="card-header bg-success text-white">
-                <h5 class="mb-0">Rate this Recipe</h5>
-            </div>
-            <div class="card-body">
-                <form method="post" action="{% url 'recipes:rate_recipe' recipe.id %}">
+            {% if user.is_authenticated %}
+            <div>
+                <!-- Like Button -->
+                <form method="post" action="{% url 'recipes:toggle_like' recipe.id %}" class="d-inline">
                     {% csrf_token %}
-                    <div class="mb-3">
-                        <label class="form-label">Your Rating:</label>
-                        <div class="rating-stars">
-                            {% for i in "12345"|make_list %}
-                            <button type="submit" name="value" value="{{ forloop.counter }}" class="btn btn-outline-warning btn-sm">
-                                {{ forloop.counter }}★
-                            </button>
-                            {% endfor %}
-                        </div>
-                    </div>
+                    <button type="submit" class="btn btn-sm {% if user in recipe.likes.all %}btn-danger{% else %}btn-outline-light{% endif %}">
+                        <i class="{% if user in recipe.likes.all %}fas{% else %}far{% endif %} fa-heart"></i>
+                        {% if user in recipe.likes.all %}Liked{% else %}Like{% endif %}
+                    </button>
                 </form>
                 
-                <!-- Check if user already rated -->
-                {% with user_rating=recipe.ratings.all %}
-                    {% for rating in user_rating %}
-                        {% if rating.user == user %}
-                            <p class="text-muted">You rated this {{ rating.value }}★</p>
-                        {% endif %}
-                    {% endfor %}
-                {% endwith %}
+                <!-- Bookmark Button -->
+                <form method="post" action="{% url 'recipes:toggle_bookmark' recipe.id %}" class="d-inline ms-2">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm {% if user in recipe.bookmarks.all %}btn-warning{% else %}btn-outline-light{% endif %}">
+                        <i class="{% if user in recipe.bookmarks.all %}fas{% else %}far{% endif %} fa-bookmark"></i>
+                        {% if user in recipe.bookmarks.all %}Saved{% else %}Save{% endif %}
+                    </button>
+                </form>
             </div>
+            {% endif %}
         </div>
-        {% endif %}
+    </div>
+</div>
 
+<!-- Rating Section -->
+{% if user.is_authenticated %}
+<div class="card mt-4">
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0">Rate this Recipe</h5>
+    </div>
+    <div class="card-body">
+        <form method="post" action="{% url 'recipes:rate_recipe' recipe.id %}">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label">Your Rating:</label>
+                <div>
+                    {% for i in "12345"|make_list %}
+                    <button type="submit" name="value" value="{{ forloop.counter }}" 
+                            class="btn btn-sm {% if user_rating == forloop.counter %}btn-warning{% else %}btn-outline-warning{% endif %}">
+                        {{ forloop.counter }}★
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
+        </form>
+        
+        <!-- Check if user already rated -->
+        {% with user_rating=recipe.ratings.all %}
+            {% for rating in user_rating %}
+                {% if rating.user == user %}
+                    <p class="text-muted">You rated this {{ rating.value }}★</p>
+                {% endif %}
+            {% endfor %}
+        {% endwith %}
+    </div>
+</div>
+{% endif %}
         <!-- Comments Section -->
         <div class="card mt-4">
             <div class="card-header bg-success text-white">
