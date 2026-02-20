@@ -12,7 +12,7 @@ from .models import (
     Rating,
 )
 
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
 from django.views.generic import CreateView
 from .forms import RecipeForm, IngredientForm, StepForm
@@ -29,6 +29,9 @@ from django.db.models import Q
 
 from django.contrib.contenttypes.models import ContentType
 from notifications.models import Activity
+
+
+from django.views.generic.edit import UpdateView, DeleteView
 
 
 class RecipeListView(ListView):
@@ -180,7 +183,9 @@ def add_comment(request, recipe_id):
     content = request.POST.get("content")
 
     if content:
-        comment = Comment.objects.create(recipe=recipe, user=request.user, content=content)
+        comment = Comment.objects.create(
+            recipe=recipe, user=request.user, content=content
+        )
         # CREATE ACTIVITY
         Activity.objects.create(
             actor=request.user,
@@ -256,3 +261,112 @@ def toggle_like(request, recipe_id):
         )
 
     return redirect("recipes:recipe_detail", slug=recipe.slug)
+
+
+class RecipeUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    """View to handle updating a recipe. Only the creator can update."""
+
+    model = Recipe
+    fields = [
+        "title",
+        "description",
+        "category",
+        "prep_time",
+        "cook_time",
+        "servings",
+        "featured_image",
+    ]
+    template_name = "recipes/recipe_form.html"
+
+    def test_func(self):
+        """check if the logged in user is the creator of the recipe"""
+        recipe = self.get_object()
+        return self.request.user == recipe.creator
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        recipe = self.get_object()
+
+        IngredientFormSet = inlineformset_factory(
+            Recipe,
+            Ingredient,
+            fields=["name", "quantity", "unit"],
+            extra=1,
+            can_delete=True,
+        )
+        StepFormSet = inlineformset_factory(
+            Recipe,
+            Step,
+            fields=["step_number", "description"],
+            extra=1,
+            can_delete=True,
+        )
+
+        if self.request.POST:
+            context["ingredient_formset"] = IngredientFormSet(
+                self.request.POST, instance=recipe
+            )
+            context["step_formset"] = StepFormSet(self.request.POST, instance=recipe)
+        else:
+            context["ingredient_formset"] = IngredientFormSet(instance=recipe)
+            context["step_formset"] = StepFormSet(instance=recipe)
+
+        return context
+
+    def form_valid(self, form):
+        print("=== FORM VALID CALLED ===")
+        context = self.get_context_data()
+        ingredient_formset = context['ingredient_formset']
+        step_formset = context['step_formset']
+        
+        print(f"Ingredient formset valid: {ingredient_formset.is_valid()}")
+        print(f"Step formset valid: {step_formset.is_valid()}")
+        
+        if ingredient_formset.is_valid() and step_formset.is_valid():
+            self.object = form.save()
+            print(f"Recipe saved with ID: {self.object.id}")
+            
+            ingredient_formset.instance = self.object
+            step_formset.instance = self.object
+            ingredient_formset.save()
+            step_formset.save()
+            print("Ingredients and steps saved")
+            
+            return super().form_valid(form)
+        else:
+            print("Formset errors:")
+            print(ingredient_formset.errors)
+            print(step_formset.errors)
+            return self.form_invalid(form)
+
+    def get_success_url(self):
+        return reverse_lazy("recipes:recipe_detail", kwargs={"slug": self.object.slug})
+
+
+class RecipeDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    """View to handle deleting a recipe. Only the creator can delete."""
+
+    model = Recipe
+    template_name = "recipes/recipe_confirm_delete.html"
+    success_url = reverse_lazy("recipes:recipe_list")
+
+    def test_func(self):
+        """check if the logged in user is the creator of the recipe"""
+        recipe = self.get_object()
+        return self.request.user == recipe.creator
+
+    def delete(self, request, *args, **kwargs):
+        """Override delete to also remove related activities"""
+        self.object = self.get_object()
+        recipe_id = self.object.id
+
+        # Delete related activities
+        Activity.objects.filter(
+            target_content_type=ContentType.objects.get_for_model(self.object),
+            target_object_id=recipe_id,
+        ).delete()
+
+        messages.success(
+            request, "Recipe and all related activities have been deleted successfully."
+        )
+        return super().delete(request, *args, **kwargs)

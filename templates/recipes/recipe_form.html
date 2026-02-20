@@ -1,155 +1,257 @@
-{% extends 'base.html' %}
-{% load crispy_forms_tags %}
-
-{% block title %}Create Recipe - Food Recipes{% endblock %}
-
-{% block content %}
+{% extends 'base.html' %} {% load crispy_forms_tags %} {% block title %}Create
+Recipe - Food Recipes{% endblock %} {% block content %}
 <div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-10">
-            <div class="card">
-                <div class="card-header bg-success text-white">
-                    <h4 class="mb-0">Create New Recipe</h4>
-                </div>
-                <div class="card-body">
-                    <form method="post" enctype="multipart/form-data" id="recipeForm">
-                        {% csrf_token %}
-                        
-                        <!-- Basic Info -->
-                        <h5>Basic Information</h5>
-                        {{ form|crispy }}
-                        
-                        <hr>
-                        
-                        <!-- Ingredients Section -->
-                        <h5>Ingredients</h5>
-                        {{ ingredient_formset.management_form }}
-                        <div id="ingredient-forms">
-                            {% for form in ingredient_formset %}
-                            <div class="ingredient-form row mb-2">
-                                <div class="col-md-4">
-                                    <input type="text" name="{{ form.name.html_name }}" class="form-control" placeholder="Name" value="{{ form.name.value|default:'' }}">
-                                </div>
-                                <div class="col-md-3">
-                                    <input type="text" name="{{ form.quantity.html_name }}" class="form-control" placeholder="Quantity" value="{{ form.quantity.value|default:'' }}">
-                                </div>
-                                <div class="col-md-3">
-                                    <input type="text" name="{{ form.unit.html_name }}" class="form-control" placeholder="Unit" value="{{ form.unit.value|default:'' }}">
-                                </div>
-                                <div class="col-md-2">
-                                    <button type="button" class="btn btn-danger btn-sm remove-form" onclick="removeForm(this)">Remove</button>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        <button type="button" class="btn btn-sm btn-outline-success mb-4" id="add-ingredient" onclick="addIngredient()">
-                            <i class="fas fa-plus"></i> Add Ingredient
-                        </button>
-                        
-                        <hr>
-                        
-                        <!-- Steps Section -->
-                        <h5>Steps</h5>
-                        {{ step_formset.management_form }}
-                        <div id="step-forms">
-                            {% for form in step_formset %}
-                            <div class="step-form row mb-2">
-                                <div class="col-md-2">
-                                    <input type="number" name="{{ form.step_number.html_name }}" class="form-control" placeholder="Step #" value="{{ form.step_number.value|default:'' }}">
-                                </div>
-                                <div class="col-md-9">
-                                    <textarea name="{{ form.description.html_name }}" class="form-control" rows="2" placeholder="Description">{{ form.description.value|default:'' }}</textarea>
-                                </div>
-                                <div class="col-md-1">
-                                    <button type="button" class="btn btn-danger btn-sm remove-form">×</button>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        <button type="button" class="btn btn-sm btn-outline-success mb-4" id="add-step" onclick="addStep()">
-                            <i class="fas fa-plus"></i> Add Step
-                        </button>
-                        
-                        <hr>
-                        
-                        <!-- Submit Button -->
-                        <div class="text-center">
-                            <button type="submit" class="btn btn-success btn-lg px-5">Save Recipe</button>
-                            <a href="{% url 'recipes:recipe_list' %}" class="btn btn-outline-secondary btn-lg px-5">Cancel</a>
-                        </div>
-                    </form>
-                </div>
-            </div>
+  <div class="row justify-content-center">
+    <div class="col-md-10">
+      <div class="card">
+        <div class="card-header bg-success text-white">
+          <h4 class="mb-0">Create New Recipe</h4>
         </div>
+        <div class="card-body">
+          <form method="post" enctype="multipart/form-data" id="recipeForm">
+            {% csrf_token %}
+
+            <!-- Basic Info -->
+            <h5>Basic Information</h5>
+            {{ form|crispy }}
+
+            <hr />
+
+            <!-- Ingredients Section -->
+            <h5>Ingredients</h5>
+            {{ ingredient_formset.management_form }}
+            <div id="ingredient-forms">
+              {% for form in ingredient_formset %}
+              <div class="ingredient-form row mb-2">
+                {% for hidden in form.hidden_fields %} {{ hidden }} {% endfor %}
+                <div class="col-md-4">
+                  <input
+                    type="text"
+                    name="{{ form.name.html_name }}"
+                    class="form-control"
+                    placeholder="Name"
+                    value="{{ form.name.value|default:'' }}"
+                  />
+                </div>
+                <div class="col-md-3">
+                  <input
+                    type="text"
+                    name="{{ form.quantity.html_name }}"
+                    class="form-control"
+                    placeholder="Quantity"
+                    value="{{ form.quantity.value|default:'' }}"
+                  />
+                </div>
+                <div class="col-md-3">
+                  <input
+                    type="text"
+                    name="{{ form.unit.html_name }}"
+                    class="form-control"
+                    placeholder="Unit"
+                    value="{{ form.unit.value|default:'' }}"
+                  />
+                </div>
+                <div class="col-md-2">
+                  {% if form.instance.pk %}
+                  <button
+                    type="button"
+                    class="btn btn-danger btn-sm remove-form"
+                    onclick="removeForm(this)"
+                  >
+                    Remove
+                  </button>
+                  {% else %}
+                  <button
+                    type="button"
+                    class="btn btn-danger btn-sm remove-form"
+                    onclick="removeForm(this)"
+                  >
+                    Remove
+                  </button>
+                  {% endif %}
+                </div>
+              </div>
+              {% if form.instance.pk %}
+    <div class="col-md-1">
+        <label class="text-danger">
+            <input type="checkbox" name="{{ form.DELETE.html_name }}" class="form-check-input">
+            Delete
+        </label>
     </div>
+{% endif %}
+              {% endfor %}
+            </div>
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-success mb-4"
+              id="add-ingredient"
+              onclick="addIngredient()"
+            >
+              <i class="fas fa-plus"></i> Add Ingredient
+            </button>
+
+            <hr />
+
+            <!-- Steps Section -->
+            <h5>Steps</h5>
+            {{ step_formset.management_form }}
+            <div id="step-forms">
+              {% for form in step_formset %}
+              <div class="step-form row mb-2">
+                {% for hidden in form.hidden_fields %} {{ hidden }} {% endfor %}
+                <div class="col-md-2">
+                  <input
+                    type="number"
+                    name="{{ form.step_number.html_name }}"
+                    class="form-control"
+                    placeholder="Step #"
+                    value="{{ form.step_number.value|default:'' }}"
+                  />
+                </div>
+                <div class="col-md-9">
+                  <textarea
+                    name="{{ form.description.html_name }}"
+                    class="form-control"
+                    rows="2"
+                    placeholder="Description"
+                  >
+{{ form.description.value|default:'' }}</textarea
+                  >
+                </div>
+                <div class="col-md-1">
+                  <button
+                    type="button"
+                    class="btn btn-danger btn-sm remove-form"
+                    onclick="removeForm(this)"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+              {% if form.instance.pk %}
+    <div class="col-md-1">
+        <label class="text-danger">
+            <input type="checkbox" name="{{ form.DELETE.html_name }}" class="form-check-input">
+            Delete
+        </label>
+    </div>
+{% endif %}
+              {% endfor %}
+            </div>
+            
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-success mb-4"
+              id="add-step"
+              onclick="addStep()"
+            >
+              <i class="fas fa-plus"></i> Add Step
+            </button>
+
+            <hr />
+
+            <!-- Submit Button -->
+            <div class="text-center">
+              <button type="submit" class="btn btn-success btn-lg px-5">
+                Save Recipe
+              </button>
+              <a
+                href="{% url 'recipes:recipe_list' %}"
+                class="btn btn-outline-secondary btn-lg px-5"
+                >Cancel</a
+              >
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener("DOMContentLoaded", function () {
     // Add ingredient
-    document.getElementById('add-ingredient').addEventListener('click', function() {
-        var forms = document.getElementById('ingredient-forms');
-        var totalForms = document.getElementById('id_ingredients-TOTAL_FORMS');
+    document
+      .getElementById("add-ingredient")
+      .addEventListener("click", function () {
+        var forms = document.getElementById("ingredient-forms");
+        var totalForms = document.getElementById("id_ingredients-TOTAL_FORMS");
         var formNum = forms.children.length;
         var newForm = forms.children[0].cloneNode(true);
-        
+
         // Update form index
-        newForm.innerHTML = newForm.innerHTML.replace(/ingredients-0-/g, 'ingredients-' + formNum + '-');
-        newForm.innerHTML = newForm.innerHTML.replace(/ingredients-0\]/g, 'ingredients-' + formNum + ']');
-        
+        newForm.innerHTML = newForm.innerHTML.replace(
+          /ingredients-0-/g,
+          "ingredients-" + formNum + "-",
+        );
+        newForm.innerHTML = newForm.innerHTML.replace(
+          /ingredients-0\]/g,
+          "ingredients-" + formNum + "]",
+        );
+
         // Clear input values
-        var inputs = newForm.querySelectorAll('input');
-        inputs.forEach(function(input) {
-            if (input.type !== 'button') {
-                input.value = '';
-            }
+        var inputs = newForm.querySelectorAll("input");
+        inputs.forEach(function (input) {
+          if (input.type !== "button") {
+            input.value = "";
+          }
         });
-        
+
         forms.appendChild(newForm);
         totalForms.value = formNum + 1;
-    });
-    
+      });
+
     // Add step
-    document.getElementById('add-step').addEventListener('click', function() {
-        var forms = document.getElementById('step-forms');
-        var totalForms = document.getElementById('id_steps-TOTAL_FORMS');
-        var formNum = forms.children.length;
-        var newForm = forms.children[0].cloneNode(true);
-        
-        // Update form index
-        newForm.innerHTML = newForm.innerHTML.replace(/steps-0-/g, 'steps-' + formNum + '-');
-        newForm.innerHTML = newForm.innerHTML.replace(/steps-0\]/g, 'steps-' + formNum + ']');
-        
-        // Clear input values
-        var inputs = newForm.querySelectorAll('input, textarea');
-        inputs.forEach(function(input) {
-            if (input.type !== 'button') {
-                input.value = '';
-            }
-        });
-        
-        forms.appendChild(newForm);
-        totalForms.value = formNum + 1;
-    });
-    
-    // Remove form
-    document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('remove-form')) {
-            var form = e.target.closest('.ingredient-form, .step-form');
-            if (form && form.parentElement.children.length > 1) {
-                form.remove();
-                
-                // Update total forms
-                if (form.classList.contains('ingredient-form')) {
-                    var totalForms = document.getElementById('id_ingredients-TOTAL_FORMS');
-                    totalForms.value = document.getElementById('ingredient-forms').children.length;
-                } else {
-                    var totalForms = document.getElementById('id_steps-TOTAL_FORMS');
-                    totalForms.value = document.getElementById('step-forms').children.length;
-                }
-            }
+    document.getElementById("add-step").addEventListener("click", function () {
+      var forms = document.getElementById("step-forms");
+      var totalForms = document.getElementById("id_steps-TOTAL_FORMS");
+      var formNum = forms.children.length;
+      var newForm = forms.children[0].cloneNode(true);
+
+      // Update form index
+      newForm.innerHTML = newForm.innerHTML.replace(
+        /steps-0-/g,
+        "steps-" + formNum + "-",
+      );
+      newForm.innerHTML = newForm.innerHTML.replace(
+        /steps-0\]/g,
+        "steps-" + formNum + "]",
+      );
+
+      // Clear input values
+      var inputs = newForm.querySelectorAll("input, textarea");
+      inputs.forEach(function (input) {
+        if (input.type !== "button") {
+          input.value = "";
         }
+      });
+
+      forms.appendChild(newForm);
+      totalForms.value = formNum + 1;
     });
-});
+
+    // Remove form
+    document.addEventListener("click", function (e) {
+      if (e.target.classList.contains("remove-form")) {
+        var form = e.target.closest(".ingredient-form, .step-form");
+        if (form && form.parentElement.children.length > 1) {
+          form.remove();
+
+          // Update total forms
+          if (form.classList.contains("ingredient-form")) {
+            var totalForms = document.getElementById(
+              "id_ingredients-TOTAL_FORMS",
+            );
+            totalForms.value =
+              document.getElementById("ingredient-forms").children.length;
+          } else {
+            var totalForms = document.getElementById("id_steps-TOTAL_FORMS");
+            totalForms.value =
+              document.getElementById("step-forms").children.length;
+          }
+        }
+      }
+    });
+  });
 </script>
 {% endblock %}

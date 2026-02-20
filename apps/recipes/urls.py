@@ -12,4 +12,6 @@ urlpatterns = [
     path("rate/<int:recipe_id>/", views.rate_recipe, name="rate_recipe"),
     path("bookmarks/", views.BookmarkListView.as_view(), name="bookmarks"),
     path("<slug:slug>/", views.RecipeDetailView.as_view(), name="recipe_detail"),
+    path("<slug:slug>/edit/", views.RecipeUpdateView.as_view(), name="recipe_edit"),
+    path("<slug:slug>/delete/", views.RecipeDeleteView.as_view(), name="recipe_delete"),
 ]
