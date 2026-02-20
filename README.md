@@ -61,6 +61,7 @@ A full-featured recipe sharing platform built with Django. Users can create, sha
 
 ## 📁 Project Structure
 
+```
 food_recipes_project/
 ├── apps/ # Django applications
 │ ├── accounts/ # User authentication & profiles
@@ -76,6 +77,7 @@ food_recipes_project/
 ├── media/ # User uploaded files
 ├── manage.py
 └── requirements.txt
+```
 
 ## 🚀 Installation
 
@@ -118,14 +120,17 @@ python manage.py test
 # 📊 Database Schema
 
 ## User (CustomUser)
+```
 ├── Profile (bio, picture, website)
 ├── Recipes (created by user)
 ├── Likes (recipes user liked)
 ├── Bookmarks (recipes user saved)
 ├── Ratings (user's ratings)
 └── Comments (user's comments)
+```
 
 ## Recipe
+```
 ├── Category
 ├── Ingredients (dynamic)
 ├── Steps (ordered)
@@ -134,11 +139,13 @@ python manage.py test
 ├── Bookmarks
 ├── Ratings
 └── Comments
-
+```
 ## Activity
+```
 ├── Actor (user)
 ├── Verb (like, comment, create)
 └── Target (recipe, comment)
+```
 
 # 🎯 Future Features
 
