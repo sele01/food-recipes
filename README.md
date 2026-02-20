@@ -90,7 +90,7 @@ food_recipes_project/
 
 ## bash
 ### 1. Clone the repository
-git clone https://github.com/yourusername/food-recipes.git
+git clone https://github.com/sele21/food-recipes.git
 cd food-recipes
 
 ### 2. Create and activate virtual environment
