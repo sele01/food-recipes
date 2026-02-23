@@ -188,7 +188,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 *Solomon K. Tegegne*
 
-    GitHub: @selel21
+    GitHub: @sele21
 
     Email: sele.edu21@gmail.com
 

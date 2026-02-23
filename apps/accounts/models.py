@@ -1,6 +1,11 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.contrib.auth import get_user_model
+from django.conf import settings
+
+# User = get_user_model()
+
 
 
 class CustomUser(AbstractUser):
@@ -47,3 +52,21 @@ class CustomUser(AbstractUser):
     class Meta:
         verbose_name = _("user")
         verbose_name_plural = _("users")
+
+
+class Follow(models.Model):
+    '''Track user follow relationships '''
+    follower = models.ForeignKey(
+        'accounts.CustomUser', on_delete=models.CASCADE, related_name='following'
+    )
+    followed = models.ForeignKey(
+        'accounts.CustomUser', on_delete=models.CASCADE, related_name='followers'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['follower', 'followed']
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.follower.username} follows {self.followed.username}"

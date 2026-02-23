@@ -8,4 +8,5 @@ urlpatterns = [
     path("profile/<slug:username>/", views.ProfileView.as_view(), name="profile"),
     # private profile only logged in
     path("dashboard/", views.DashboardView.as_view(), name="dashboard"),
+    path('follow/<str:username>/', views.toggle_follow, name='toggle_follow'),
 ]

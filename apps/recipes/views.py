@@ -316,22 +316,22 @@ class RecipeUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     def form_valid(self, form):
         print("=== FORM VALID CALLED ===")
         context = self.get_context_data()
-        ingredient_formset = context['ingredient_formset']
-        step_formset = context['step_formset']
-        
+        ingredient_formset = context["ingredient_formset"]
+        step_formset = context["step_formset"]
+
         print(f"Ingredient formset valid: {ingredient_formset.is_valid()}")
         print(f"Step formset valid: {step_formset.is_valid()}")
-        
+
         if ingredient_formset.is_valid() and step_formset.is_valid():
             self.object = form.save()
             print(f"Recipe saved with ID: {self.object.id}")
-            
+
             ingredient_formset.instance = self.object
             step_formset.instance = self.object
             ingredient_formset.save()
             step_formset.save()
             print("Ingredients and steps saved")
-            
+
             return super().form_valid(form)
         else:
             print("Formset errors:")
@@ -370,3 +370,26 @@ class RecipeDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
             request, "Recipe and all related activities have been deleted successfully."
         )
         return super().delete(request, *args, **kwargs)
+
+
+class FollowingFeedView(LoginRequiredMixin, ListView):
+    """Show recipes from users that the logged-in user is following"""
+
+    model = Recipe
+    template_name = "recipes/following_feed.html"
+    context_object_name = "recipes"
+    paginate_by = 9
+
+    def get_queryset(self):
+        following_users = self.request.user.following.all().values_list(
+            "followed", flat=True
+        )
+
+        return Recipe.objects.filter(
+            creator_id__in=following_users, is_published=True
+        ).order_by("-created_at")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["feed_type"] = "following"
+        return context

@@ -1,0 +1,85 @@
+{% extends 'base.html' %} {% block title %}Following Feed - Food Recipes
+{%endblock %} {% block content %}
+<div class="row">
+  <div class="col-12">
+    <h2 class="mb-4">
+      <i class="fas fa-rss"></i>
+      Feed from Users You Follow
+    </h2>
+
+    {% if recipes %}
+    <div class="row">
+      {% for recipe in recipes %}
+      <div class="col-md-4 mb-4">
+        <div class="card h-100">
+          {% if recipe.featured_image %}
+          <img
+            src="{{ recipe.featured_image.url }}"
+            class="card-img-top"
+            alt="{{ recipe.title }}"
+            style="height: 200px; object-fit: cover"
+          />
+          {% endif %}
+          <div class="card-body">
+            <h5 class="card-title">{{ recipe.title }}</h5>
+            <p class="card-text text-muted small">
+              By
+              <a href="{% url 'accounts:profile' recipe.creator.username %}">
+                {{ recipe.creator.username }}
+              </a>
+              <br />
+              <i class="far fa-clock"></i> {{ recipe.prep_time }} mins
+              <br />
+              <i class="fas fa-heart"></i> {{ recipe.likes.count }}
+            </p>
+            <a
+              href="{% url 'recipes:recipe_detail' recipe.slug %}"
+              class="btn btn-success btn-sm"
+              >View Recipe</a
+            >
+          </div>
+          <div class="card-footer text-muted">
+            <small>{{ recipe.created_at|timesince }} ago</small>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <nav>
+      <ul class="pagination">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.previous_page_number }}"
+            >Previous</a
+          >
+        </li>
+        {% endif %} {% for num in page_obj.paginator.page_range %}
+        <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+          <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+        </li>
+        {% endfor %} {% if page_obj.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.next_page_number }}"
+            >Next</a
+          >
+        </li>
+        {% endif %}
+      </ul>
+    </nav>
+    {% endif %} {% else %}
+    <div class="alert alert-info">
+      <p>You're not following anyone yet, or they haven't posted recipes.</p>
+      <p class="mb-0">
+        <a href="{% url 'recipes:recipe_list' %}" class="alert-link"
+          >Browse recipes</a
+        >
+        and follow their creators!
+      </p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

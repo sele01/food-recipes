@@ -1,10 +1,13 @@
-from django.shortcuts import render, get_list_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth import get_user_model
 from django.views.generic import DetailView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
 from django.urls import reverse_lazy
 from .models import CustomUser
 from notifications.models import Activity
+from django.contrib import messages
+from .models import Follow
 
 
 User = get_user_model()
@@ -30,13 +33,21 @@ class ProfileView(DetailView):
         context["total_likes_received"] = sum(
             recipe.likes.count() for recipe in user.recipes.all()
         )
+
+        context["followers_count"] = Follow.objects.filter(followed=user).count()
+        context["following_count"] = Follow.objects.filter(follower=user).count()
+
+        if self.request.user.is_authenticated:
+            context["is_following"] = Follow.objects.filter(
+                follower=self.request.user, followed=user
+            ).exists()
+
         # Get user's recent activity (public)
         context["activities"] = (
             Activity.objects.filter(actor=user)
             .exclude(verb="follow")  # Keep follows private
             .select_related("target_content_type")[:20]
         )
-
         return context
 
 
@@ -75,3 +86,33 @@ class DashboardView(LoginRequiredMixin, UpdateView):
         context["recent_comments"] = user.comment_set.all()[:5]
 
         return context
+
+
+@login_required
+def toggle_follow(request, username):
+    """
+    follow or unfollow a user
+    """
+    followed_user = get_object_or_404(User, username=username)
+
+    if request.user == followed_user:
+        messages.error(request, "You cannot follow yourself.")
+        return redirect("accounts:profile", username=username)
+
+    follow = Follow.objects.filter(follower=request.user, followed=followed_user)
+
+    if follow.exists():
+        follow.delete()
+        messages.success(request, f"You have unfollowed {followed_user.username}.")
+    else:
+        Follow.objects.create(follower=request.user, followed=followed_user)
+
+        Activity.objects.create(
+            actor=request.user,
+            verb="follow",
+            target=followed_user,
+            recipient=followed_user,
+        )
+
+        messages.success(request, f"You are now following {followed_user.username}.")
+    return redirect("accounts:profile", username=username)
