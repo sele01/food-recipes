@@ -1,5 +1,11 @@
 from django.shortcuts import render, get_object_or_404
-from django.views.generic import ListView, DetailView
+from django.views.generic import (
+    ListView,
+    DetailView,
+    CreateView,
+    UpdateView,
+    DeleteView,
+)
 from .models import (
     Recipe,
     Ingredient,
@@ -10,11 +16,12 @@ from .models import (
     Comment,
     Bookmark,
     Rating,
+    Collection,
+    CollectionItem,
 )
 
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
-from django.views.generic import CreateView
 from .forms import RecipeForm, IngredientForm, StepForm
 from django.forms import inlineformset_factory
 
@@ -393,3 +400,133 @@ class FollowingFeedView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context["feed_type"] = "following"
         return context
+
+
+class CollectionListView(ListView):
+    """View to list all collections, with option to filter by user"""
+
+    model = Collection
+    template_name = "recipes/collection_list.html"
+    context_object_name = "collections"
+    paginate_by = 12
+
+    def get_queryset(self):
+        if self.request.user.is_authenticated and self.request.GET.get("mine"):
+            return Collection.objects.filter(creator=self.request.user)
+        return Collection.objects.filter(is_public=True)
+
+
+class CollectionDetailView(DetailView):
+    """View to show details of a collection, including its recipes"""
+
+    model = Collection
+    template_name = "recipes/collection_detail.html"
+    context_object_name = "collection"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        collection = self.get_object()
+
+        if self.request.user.is_authenticated:
+            user_collection = Collection.objects.filter(
+                creator=self.request.user
+            ).exclude(id=collection.id)
+            context["user_collections"] = user_collection
+
+        return context
+
+
+class CollectionCreateView(LoginRequiredMixin, CreateView):
+    """create a new collection"""
+
+    model = Collection
+    fields = ["name", "description", "is_public"]
+    template_name = "recipes/collection_form.html"
+
+    def form_valid(self, form):
+        form.instance.creator = self.request.user
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy("recipes:collection_detail", kwargs={"pk": self.object.pk})
+
+
+class CollectionCreateView(LoginRequiredMixin, CreateView):
+    """create a new collection"""
+
+    model = Collection
+    fields = ["name", "description", "is_public"]
+    template_name = "recipes/collection_form.html"
+
+    def form_valid(self, form):
+        form.instance.creator = self.request.user
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy("recipes:collection_detail", kwargs={"pk": self.object.pk})
+
+
+class CollectionUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    """edit a collection"""
+
+    model = Collection
+    fields = ["name", "description", "is_public"]
+    template_name = "recipes/collection_form.html"
+
+    def test_func(self):
+        collection = self.get_object()
+        return self.request.user == collection.creator
+
+    def get_success_url(self):
+        return reverse_lazy("recipes:collection_detail", kwargs={"pk": self.object.pk})
+
+
+class CollectionDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    """delete a collection"""
+
+    model = Collection
+    template_name = "recipes/collection_confirm_delete.html"
+    success_url = reverse_lazy("recipes:collection_list")
+
+    def test_func(self):
+        collection = self.get_object()
+        return self.request.user == collection.creator
+
+
+@login_required
+def add_to_collection(request, recipe_id):
+    """Add a recipe to a collection"""
+
+    recipe = get_object_or_404(Recipe, id=recipe_id)
+    collection_id = request.POST.get("collection_id")
+
+    if collection_id:
+        collection = get_object_or_404(
+            Collection, id=collection_id, creator=request.user
+        )
+        item, created = CollectionItem.objects.get_or_create(
+            collection=collection, recipe=recipe
+        )
+
+        if created:
+            messages.success(request, f'Added to collection "{collection.name}".')
+        else:
+            messages.info(request, f'"{collection.name}" already contains this recipe.')
+    else:
+        messages.error(request, "No collection selected.")
+
+    return redirect("recipes:recipe_detail", slug=recipe.slug)
+
+
+@login_required
+def remove_from_collection(request, item_id):
+    """Remove a recipe from a collection"""
+
+    item = get_object_or_404(
+        CollectionItem, id=item_id, collection__creator=request.user
+    )
+    collection = item.collection
+    item.delete()
+    messages.success(request, f'Removed from collection "{collection.name}".')
+
+    return redirect("recipes:collection_detail", pk=collection.pk)

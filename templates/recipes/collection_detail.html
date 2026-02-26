@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ collection.name }} - Food Recipes{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="d-flex justify-content-between align-items-start">
+            <h1>{{ collection.name }}</h1>
+            
+            {% if user == collection.creator %}
+            <div>
+                <a href="{% url 'recipes:collection_edit' collection.pk %}" class="btn btn-outline-success btn-sm">
+                    <i class="fas fa-edit"></i> Edit
+                </a>
+                <a href="{% url 'recipes:collection_delete' collection.pk %}" class="btn btn-outline-danger btn-sm">
+                    <i class="fas fa-trash"></i> Delete
+                </a>
+            </div>
+            {% endif %}
+        </div>
+        
+        <p class="text-muted">
+            By <a href="{% url 'accounts:profile' collection.creator.username %}">{{ collection.creator.username }}</a> |
+            Created {{ collection.created_at|date:"M d, Y" }} |
+            {{ collection.recipe_count }} recipes
+        </p>
+        
+        {% if collection.description %}
+        <div class="card mb-4">
+            <div class="card-body">
+                <p>{{ collection.description }}</p>
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="row">
+            {% for item in collection.items.all %}
+            <div class="col-md-6 mb-3">
+                <div class="card h-100">
+                    {% if item.recipe.featured_image %}
+                    <img src="{{ item.recipe.featured_image.url }}" class="card-img-top" style="height: 150px; object-fit: cover;">
+                    {% endif %}
+                    <div class="card-body">
+                        <h6>{{ item.recipe.title }}</h6>
+                        <p class="small text-muted">{{ item.recipe.prep_time }} mins</p>
+                        <a href="{% url 'recipes:recipe_detail' item.recipe.slug %}" class="btn btn-sm btn-success">View</a>
+                        
+                        {% if user == collection.creator %}
+                        <a href="{% url 'recipes:remove_from_collection' item.id %}" 
+                           class="btn btn-sm btn-outline-danger float-end"
+                           onclick="return confirm('Remove from collection?')">
+                            <i class="fas fa-times"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <p class="text-muted">No recipes in this collection yet.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">About this Collection</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Created:</strong> {{ collection.created_at|date }}</p>
+                <p><strong>Recipes:</strong> {{ collection.recipe_count }}</p>
+                <p><strong>Visibility:</strong> 
+                    {% if collection.is_public %}
+                        <span class="badge bg-success">Public</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Private</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

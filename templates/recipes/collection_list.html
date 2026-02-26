@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Collections - Food Recipes{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>
+        <i class="fas fa-folder"></i> 
+        {% if request.GET.mine %}My Collections{% else %}Public Collections{% endif %}
+    </h1>
+    
+    {% if user.is_authenticated %}
+    <div>
+        <a href="?mine=1" class="btn btn-outline-success {% if request.GET.mine %}active{% endif %}">
+            <i class="fas fa-user"></i> Mine
+        </a>
+        <a href="{% url 'recipes:collection_list' %}" class="btn btn-outline-success {% if not request.GET.mine %}active{% endif %}">
+            <i class="fas fa-globe"></i> Public
+        </a>
+        <a href="{% url 'recipes:collection_create' %}" class="btn btn-success">
+            <i class="fas fa-plus"></i> New Collection
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="row">
+    {% for collection in collections %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <a href="{% url 'recipes:collection_detail' collection.pk %}" class="text-success">
+                        {{ collection.name }}
+                    </a>
+                </h5>
+                <p class="card-text">{{ collection.description|truncatewords:20 }}</p>
+                <p class="card-text text-muted small">
+                    <i class="fas fa-user"></i> {{ collection.creator.username }} |
+                    <i class="fas fa-utensils"></i> {{ collection.recipe_count }} recipes |
+                    {% if collection.is_public %}
+                        <span class="badge bg-success">Public</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Private</span>
+                    {% endif %}
+                </p>
+            </div>
+            <div class="card-footer">
+                <a href="{% url 'recipes:collection_detail' collection.pk %}" class="btn btn-sm btn-success">
+                    View Collection
+                </a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            No collections yet. 
+            {% if user.is_authenticated and request.GET.mine %}
+                <a href="{% url 'recipes:collection_create' %}">Create your first collection!</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

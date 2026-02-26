@@ -171,3 +171,45 @@ class Rating(models.Model):
 
     def __str__(self):
         return f"{self.user.username} rated {self.recipe.title}: {self.value}*"
+
+
+class Collection(models.Model):
+    """a collection of recipes created by a user"""
+
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    creator = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="collections"
+    )
+    is_public = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ["name", "creator"]
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.name} by {self.creator.username}"
+
+    @property
+    def recipe_count(self):
+        return self.items.count()
+class CollectionItem(models.Model):
+    """collection of recipes"""
+
+    collection = models.ForeignKey(
+        Collection, on_delete=models.CASCADE, related_name="items"
+    )
+    recipe = models.ForeignKey(
+        Recipe, on_delete=models.CASCADE, related_name="collection_items"
+    )
+    added_at = models.DateTimeField(auto_now_add=True)
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        unique_together = ["collection", "recipe"]
+        ordering = ["-added_at"]
+
+    def __str__(self):
+        return f"{self.recipe.title} in {self.collection.name}"

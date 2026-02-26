@@ -5,7 +5,6 @@
 {% block content %}
 <div class="row">
     <div class="col-md-8">
-        <h1>{{ recipe.title }}</h1>
         <div class="d-flex justify-content-between align-items-start">
     <h1>{{ recipe.title }}</h1>
     
@@ -147,6 +146,41 @@
         </div>
     </div>
 </div>
+
+{% if user.is_authenticated %}
+<!-- Add to Collection Dropdown -->
+<div class="mt-3">
+    <div class="dropdown">
+        <button class="btn btn-outline-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <i class="fas fa-folder-plus"></i> Add to Collection
+        </button>
+        <ul class="dropdown-menu">
+            {% for collection in user.collections.all %}
+            <li>
+                <form method="post" action="{% url 'recipes:add_to_collection' recipe.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="collection_id" value="{{ collection.id }}">
+                    <button type="submit" class="dropdown-item">
+                        {{ collection.name }}
+                        {% if recipe in collection.items.all %}
+                            <span class="text-success">(Added)</span>
+                        {% endif %}
+                    </button>
+                </form>
+            </li>
+            {% empty %}
+            <li><span class="dropdown-item-text text-muted">No collections</span></li>
+            {% endfor %}
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <a class="dropdown-item text-success" href="{% url 'recipes:collection_create' %}">
+                    <i class="fas fa-plus"></i> New Collection
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+{% endif %}
 
 <!-- Rating Section -->
 {% if user.is_authenticated %}
