@@ -43,6 +43,7 @@ urlpatterns = [
         views.remove_from_collection,
         name="remove_from_collection",
     ),
+    path("recommended/", views.RecommendedRecipesView.as_view(), name="recommended"),
     path("<slug:slug>/", views.RecipeDetailView.as_view(), name="recipe_detail"),
     path("<slug:slug>/edit/", views.RecipeUpdateView.as_view(), name="recipe_edit"),
     path("<slug:slug>/delete/", views.RecipeDeleteView.as_view(), name="recipe_delete"),

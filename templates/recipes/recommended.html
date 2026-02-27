@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+{% load recipe_extras %}
+
+{% block title %}Recommended for You - Food Recipes{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">
+        <i class="fas fa-magic text-success"></i> 
+        Recommended for You
+    </h1>
+
+    <p class="lead mb-4 text-muted">
+        Based on your likes, bookmarks, and ratings
+    </p>
+
+    <!-- Main Recommendations -->
+    <div class="row mb-5">
+        {% for recipe in recipes %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm hover-card">
+                {% if recipe.featured_image %}
+                <img src="{{ recipe.featured_image.url }}" 
+                     class="card-img-top" 
+                     alt="{{ recipe.title }}" 
+                     style="height: 200px; object-fit: cover;">
+                {% else %}
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
+                     style="height: 200px;">
+                    <i class="fas fa-utensils fa-3x text-secondary"></i>
+                </div>
+                {% endif %}
+                
+                <div class="card-body">
+                    <!-- Recommendation Reason Badge -->
+                    {% if recommendation_reasons and recommendation_reasons|get_item:recipe.id %}
+                    <span class="badge bg-info mb-2">
+                        <i class="fas fa-magic"></i> 
+                        {{ recommendation_reasons|get_item:recipe.id }}
+                    </span>
+                    {% endif %}
+                    
+                    <h5 class="card-title">{{ recipe.title }}</h5>
+                    
+                    <p class="card-text text-muted small">
+                        <i class="fas fa-user"></i> 
+                        <a href="{% url 'accounts:profile' recipe.creator.username %}" class="text-success">
+                            {{ recipe.creator.username }}
+                        </a>
+                        <br>
+                        <i class="fas fa-clock"></i> {{ recipe.prep_time }} mins 
+                        {% if recipe.cook_time %}+ {{ recipe.cook_time }} mins{% endif %}
+                        <br>
+                        <i class="fas fa-heart text-danger"></i> {{ recipe.likes.count }} 
+                        <i class="fas fa-bookmark text-warning ms-2"></i> {{ recipe.bookmarks.count }}
+                        <br>
+                        <i class="fas fa-star text-warning"></i> {{ recipe.average_rating|floatformat:1 }} ({{ recipe.rating_count }})
+                    </p>
+                    
+                    <p class="card-text">{{ recipe.description|truncatewords:20 }}</p>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{% url 'recipes:recipe_detail' recipe.slug %}" 
+                           class="btn btn-success btn-sm">
+                            <i class="fas fa-eye"></i> View Recipe
+                        </a>
+                        
+                        {% if recipe.category %}
+                        <span class="badge bg-secondary">{{ recipe.category.name }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="card-footer bg-transparent">
+                    <small class="text-muted">
+    <i class="far fa-clock"></i> Published {{ recipe.created_at|timesince }} ago
+</small>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info text-center p-5">
+                <i class="fas fa-magic fa-3x mb-3 text-info"></i>
+                <h4 class="alert-heading">No Recommendations Yet</h4>
+                <p class="mb-3">We're still learning your tastes! Here's how to get personalized recommendations:</p>
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="list-group">
+                            <div class="list-group-item">
+                                <i class="fas fa-heart text-danger me-2"></i>
+                                <strong>Like recipes</strong> you enjoy
+                            </div>
+                            <div class="list-group-item">
+                                <i class="fas fa-bookmark text-warning me-2"></i>
+                                <strong>Bookmark recipes</strong> you want to try
+                            </div>
+                            <div class="list-group-item">
+                                <i class="fas fa-star text-warning me-2"></i>
+                                <strong>Rate recipes</strong> you've made
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <hr class="my-4">
+                <p class="mb-0">
+                    <a href="{% url 'recipes:recipe_list' %}" class="btn btn-success btn-lg">
+                        <i class="fas fa-utensils"></i> Browse All Recipes
+                    </a>
+                </p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Trending This Week Section -->
+    {% if trending %}
+    <h2 class="mb-4">
+        <i class="fas fa-fire text-warning"></i> 
+        Trending This Week
+    </h2>
+
+    <div class="row mb-4">
+        {% for recipe in trending %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <i class="fas fa-fire"></i> Hot Recipe!
+                </div>
+                {% if recipe.featured_image %}
+                <img src="{{ recipe.featured_image.url }}" 
+                     class="card-img-top" 
+                     alt="{{ recipe.title }}" 
+                     style="height: 150px; object-fit: cover;">
+                {% endif %}
+                <div class="card-body">
+                    <h6 class="card-title">{{ recipe.title }}</h6>
+                    <p class="card-text text-muted small">
+                        <i class="fas fa-user"></i> {{ recipe.creator.username }}
+                        <br>
+                        <i class="fas fa-heart text-danger"></i> {{ recipe.likes.count }}
+                    </p>
+                    <a href="{% url 'recipes:recipe_detail' recipe.slug %}" 
+                       class="btn btn-sm btn-warning w-100">
+                        View Recipe
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<style>
+    .hover-card {
+        transition: transform 0.2s;
+    }
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important;
+    }
+    .badge {
+        font-size: 0.8rem;
+        padding: 0.5rem;
+    }
+</style>
+{% endblock %}

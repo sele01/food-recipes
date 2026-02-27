@@ -31,7 +31,9 @@ from django.shortcuts import redirect
 from .models import Like, Comment
 from django.contrib import messages
 
-from django.db.models import Q
+from django.db.models import Q, Count
+from datetime import timedelta
+from django.utils import timezone
 
 
 from django.contrib.contenttypes.models import ContentType
@@ -97,6 +99,30 @@ class RecipeDetailView(DetailView):
 
     def get_queryset(self):
         return Recipe.objects.filter(is_published=True)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        recipe = self.get_object()
+
+        # user interactions status
+
+        if self.request.user.is_authenticated:
+            context["user_liked"] = recipe.likes.filter(user=self.request.user).exists()
+            context["user_bookmarked"] = recipe.bookmarks.filter(
+                user=self.request.user
+            ).exists()
+            context["user_rating"] = recipe.ratings.filter(
+                user=self.request.user
+            ).first()
+        else:
+            context["user_liked"] = False
+            context["user_bookmarked"] = False
+            context["user_rating"] = None
+
+        # Add this similar recipes
+        context["similar_recipes"] = recipe.get_similar_recipes()
+
+        return context
 
 
 class RecipeCreateView(LoginRequiredMixin, CreateView):
@@ -530,3 +556,94 @@ def remove_from_collection(request, item_id):
     messages.success(request, f'Removed from collection "{collection.name}".')
 
     return redirect("recipes:collection_detail", pk=collection.pk)
+
+
+class RecommendedRecipesView(LoginRequiredMixin, ListView):
+    "Personalized recipe recommendations based on user's collections and interactions"
+
+    model = Recipe
+    template_name = "recipes/recommended.html"
+    context_object_name = "recipes"
+    paginate_by = 12
+
+    def get_queryset(self):
+        user = self.request.user
+
+        # Get user's interests
+        interacted_recipes = Recipe.objects.filter(
+            Q(likes__user=user) | Q(bookmarks__user=user) | Q(ratings__user=user)
+        )
+
+        favorite_categories = interacted_recipes.values_list(
+            "category", flat=True
+        ).distinct()
+
+        # Store recommendations with reasons
+        recommendations = []
+
+        # Base recipes (exclude user's own)
+        base_recipes = Recipe.objects.filter(is_published=True).exclude(creator=user)
+
+        # Category-based recommendations
+        if favorite_categories:
+            valid_categories = [c for c in favorite_categories if c]
+            if valid_categories:
+                category_recipes = base_recipes.filter(category__in=valid_categories)
+                for recipe in category_recipes:
+                    category_name = (
+                        recipe.category.name if recipe.category else "Unknown"
+                    )
+                    recommendations.append(
+                        {
+                            "recipe": recipe,
+                            "reason": f"Because you like {category_name} recipes",
+                            "priority": 1,
+                        }
+                    )
+
+        # Popular recipes (fallback/add more)
+        popular = base_recipes.annotate(
+            interaction_count=Count("likes")
+            + Count("bookmarks")
+            + Count("ratings")
+            + Count("comments")
+        ).order_by("-interaction_count")[:20]
+
+        for recipe in popular:
+            # Check if already added
+            if not any(r["recipe"].id == recipe.id for r in recommendations):
+                recommendations.append(
+                    {"recipe": recipe, "reason": "Popular this week", "priority": 2}
+                )
+
+        # Sort by priority, then by creation date
+        recommendations.sort(
+            key=lambda x: (x["priority"], -x["recipe"].created_at.timestamp())
+        )
+
+        # Store in session or cache for template
+        self.recommendation_reasons = {
+            r["recipe"].id: r["reason"] for r in recommendations
+        }
+
+        return [r["recipe"] for r in recommendations][:50]
+
+
+def get_context_data(self, **kwargs):
+    context = super().get_context_data(**kwargs)
+
+    # Add reasons to context
+    if hasattr(self, "recommendation_reasons"):
+        context["recommendation_reasons"] = self.recommendation_reasons
+
+    # Trending
+    week_ago = timezone.now() - timedelta(days=7)
+    trending = (
+        Recipe.objects.filter(is_published=True, created_at__gte=week_ago)
+        .annotate(
+            recent_likes=Count("likes", filter=Q(likes__created_at__gte=week_ago))
+        )
+        .order_by("-recent_likes")[:5]
+    )
+    context["trending"] = trending
+    return context

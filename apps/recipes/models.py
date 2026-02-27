@@ -1,6 +1,9 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 
+from django.utils import timezone
+from datetime import timedelta
+
 User = get_user_model()
 
 
@@ -64,6 +67,55 @@ class Recipe(models.Model):
     @property
     def rating_count(self):
         return self.ratings.count()
+
+    def total_interactions(self):
+        """'total likes + bookmarks + ratings + comments"""
+        return (
+            self.likes.count()
+            + self.bookmarks.count()
+            + self.ratings.count()
+            + self.comments.count()
+        )
+
+    def trending_score(self):
+        """Calculate trending score based on recent activity"""
+
+        since = timezone.now() - timedelta(days=days)
+        recent_likes = self.likes.filter(created_at_gte=since).count()
+        recent_bookmarks = self.bookmarks.filter(created_at_gte=since).count()
+        recent_ratings = self.ratings.filter(created_at_gte=since).count()
+        recent_comments = self.comments.filter(created_at_gte=since).count()
+
+        score = (
+            (recent_likes * 5)
+            + (recent_bookmarks * 2)
+            + (recent_ratings * 4)
+            + (recent_comments * 1)
+        )
+
+        return score
+
+    def get_similar_recipes(self, limit=5):
+        """Find similar recipes based on category and shared ingredients"""
+
+        similar = Recipe.objects.filter(is_published=True).exclude(id=self.id)
+
+        if self.category:
+            same_category = similar.filter(category=self.category)
+            if same_category.exists():
+                return same_category[:limit]
+
+        my_ingredients = set(self.ingredients.values_list("name", flat=True))
+
+        scored_recipes = []
+        for recipe in similar:
+            their_ingredients = set(recipe.ingredients.values_list("name", flat=True))
+            overlap = len(my_ingredients.intersection(their_ingredients))
+            if overlap > 0:
+                scored_recipes.append((recipe, overlap))
+
+        scored_recipes.sort(key=lambda x: x[1], reverse=True)
+        return [r[0] for r in scored_recipes[:limit]]
 
 
 class RecipeImage(models.Model):
@@ -195,6 +247,8 @@ class Collection(models.Model):
     @property
     def recipe_count(self):
         return self.items.count()
+
+
 class CollectionItem(models.Model):
     """collection of recipes"""
 
