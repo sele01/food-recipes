@@ -7,7 +7,6 @@ from django.conf import settings
 # User = get_user_model()
 
 
-
 class CustomUser(AbstractUser):
     """
     Custom user model that extends Django's built-in User.
@@ -46,8 +45,6 @@ class CustomUser(AbstractUser):
     # helper method to count user's recipes
     def recipe_count(self):
         return self.recipes.count()
-    
-    
 
     class Meta:
         verbose_name = _("user")
@@ -55,18 +52,27 @@ class CustomUser(AbstractUser):
 
 
 class Follow(models.Model):
-    '''Track user follow relationships '''
     follower = models.ForeignKey(
-        'accounts.CustomUser', on_delete=models.CASCADE, related_name='following'
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="following"
     )
     followed = models.ForeignKey(
-        'accounts.CustomUser', on_delete=models.CASCADE, related_name='followers'
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="followers"
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ['follower', 'followed']
-        ordering = ['-created_at']
+        unique_together = ["follower", "followed"]
+        ordering = ["-created_at"]
+
+    def clean(self):
+        if self.follower == self.followed:
+            from django.core.exceptions import ValidationError
+
+            raise ValidationError("You cannot follow yourself")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.follower.username} follows {self.followed.username}"
