@@ -1,12 +1,13 @@
-from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from notifications.models import Activity
+from django.views.decorators.http import require_POST
 
+from django.shortcuts import render, get_object_or_404, redirect  # Add get_object_or_404 and redirect
 
 @login_required
 def notifications_list(request):
     """show all notifications for the logged-in user"""
-    notifications = Activity.objects.filter(recipient=request.user).selected_related(
+    notifications = Activity.objects.filter(recipient=request.user).select_related(
         "actor"
     )
 
@@ -20,6 +21,7 @@ def notifications_list(request):
 
 
 @login_required
+@require_POST
 def mark_notification_read(request, notification_id):
     """mark a single notification as read"""
     notification = get_object_or_404(
@@ -27,4 +29,4 @@ def mark_notification_read(request, notification_id):
     )
     notification.is_read = True
     notification.save()
-    return redirect("notifications:notifications_list")
+    return redirect("notifications:list")
