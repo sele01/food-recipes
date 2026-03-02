@@ -186,32 +186,28 @@
 {% if user.is_authenticated %}
 <div class="card mt-4">
     <div class="card-header bg-success text-white">
-        <h5 class="mb-0">Rate this Recipe</h5>
+        <h5 class="mb-0"><i class="fas fa-star"></i> Rate this Recipe</h5>
     </div>
     <div class="card-body">
         <form method="post" action="{% url 'recipes:rate_recipe' recipe.id %}">
             {% csrf_token %}
-            <div class="mb-3">
-                <label class="form-label">Your Rating:</label>
-                <div>
-                    {% for i in "12345"|make_list %}
-                    <button type="submit" name="value" value="{{ forloop.counter }}" 
-                            class="btn btn-sm {% if user_rating == forloop.counter %}btn-warning{% else %}btn-outline-warning{% endif %}">
-                        {{ forloop.counter }}★
-                    </button>
-                    {% endfor %}
-                </div>
+            <div class="d-flex gap-2 mb-3">
+                {% for i in "12345"|make_list %}
+                <button type="submit" name="value" value="{{ forloop.counter }}" 
+                        class="btn {% if user_rating and user_rating.value == forloop.counter %}btn-warning{% else %}btn-outline-warning{% endif %}"
+                        style="flex: 1;">
+                    {{ forloop.counter }}★
+                </button>
+                {% endfor %}
             </div>
         </form>
         
-        <!-- Check if user already rated -->
-        {% with user_rating=recipe.ratings.all %}
-            {% for rating in user_rating %}
-                {% if rating.user == user %}
-                    <p class="text-muted">You rated this {{ rating.value }}★</p>
-                {% endif %}
-            {% endfor %}
-        {% endwith %}
+        {% if user_rating %}
+            <p class="text-muted mb-0">
+                <i class="fas fa-check-circle text-success"></i> 
+                You rated this <strong>{{ user_rating.value }}★</strong>
+            </p>
+        {% endif %}
     </div>
 </div>
 {% endif %}

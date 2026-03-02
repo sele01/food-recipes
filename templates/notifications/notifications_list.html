@@ -1,79 +1,79 @@
-{% extends 'base.html' %} {% block title %}Notifications - Food Recipes{%
-endblock %} {% block content %}
+{% extends 'base.html' %} 
+{% block title %}Notifications - Food Recipes{%endblock %} {% block content %}
 <div class="container mt-4">
-  <div class="row">
-    <div class="col-md-8 offset-md-2">
-      <div class="card">
-        <div class="card-header bg-success text-white">
-          <h5 class="mb-0">
-            <i class="fas fa-bell"></i>
-            Notifications
-            <span class="badge bg-light text-dark ms-2">
-              {{ notifications.count }}
-            </span>
-          </h5>
-        </div>
-        <div class="card-body">
-          {% if notifications %} {% for notification in notifications %}
-          <div
-            class="notification-item p-3 mb-2 {% if not notification.is_read %}bg-light{% endif %}"
-          >
-            <div class="d-flex justify-content-between">
-              <div>
-                <strong>{{ notification.actor.username }}</strong>
+	<div class="row">
+		<div class="col-md-8 offset-md-2">
+			<div class="card">
+				<div class="card-header bg-success text-white">
+					<h5 class="mb-0">
+						<i class="fas fa-bell"></i>
+						Notifications
+						<span class="badge bg-light text-dark ms-2">
+							{{ notifications.count }}
+						</span>
+					</h5>
+				</div>
+				<div class="card-body">
+					{% if notifications %} {% for notification in notifications %}
+					<div
+						class="notification-item p-3 mb-2 {% if not notification.is_read %}bg-light{% endif %}"
+					>
+						<div class="d-flex justify-content-between">
+							<div>
+								<strong>{{ notification.actor.username }}</strong>
 
-                {% if notification.verb == 'like' %} liked your recipe
-                <a
-                  href="{% url 'recipes:recipe_detail' notification.target.slug %}"
-                >
-                  "{{ notification.target.title }}"
-                </a>
-                {% elif notification.verb == 'comment' %} commented on your
-                recipe
-                <a
-                  href="{% url 'recipes:recipe_detail' notification.target.recipe.slug %}"
-                >
-                  "{{ notification.target.recipe.title }}"
-                </a>
-                {% elif notification.verb == 'create' %} created a new recipe
-                <a
-                  href="{% url 'recipes:recipe_detail' notification.target.slug %}"
-                >
-                  "{{ notification.target.title }}"
-                </a>
-                {% elif notification.verb == 'bookmark' %} bookmarked your
-                recipe
-                <a
-                  href="{% url 'recipes:recipe_detail' notification.target.slug %}"
-                >
-                  "{{ notification.target.title }}"
-                </a>
-                {% elif notification.verb == 'follow' %} started following you
-                {% endif %}
+								{% if notification.verb == 'like' %} liked your recipe
+								<a
+									href="{% url 'recipes:recipe_detail' notification.target.slug %}"
+								>
+									"{{ notification.target.title }}"
+								</a>
+								{% elif notification.verb == 'comment' %} commented on your
+								recipe
+								<a
+									href="{% url 'recipes:recipe_detail' notification.target.recipe.slug %}"
+								>
+									"{{ notification.target.recipe.title }}"
+								</a>
+								{% elif notification.verb == 'create' %} created a new recipe
+								<a
+									href="{% url 'recipes:recipe_detail' notification.target.slug %}"
+								>
+									"{{ notification.target.title }}"
+								</a>
+								{% elif notification.verb == 'bookmark' %} bookmarked your
+								recipe
+								<a
+									href="{% url 'recipes:recipe_detail' notification.target.slug %}"
+								>
+									"{{ notification.target.title }}"
+								</a>
+								{% elif notification.verb == 'follow' %} started following you
+								{% endif %}
 
-                <small class="text-muted d-block">
-                  {{ notification.timestamp|timesince }} ago
-                </small>
-              </div>
-              <div>
-                {% if not notification.is_read %}
-                <span class="badge bg-success me-2">New</span>
-                {% endif %}
-                <a
-                  href="{% url 'notifications:mark_read' notification.id %}"
-                  class="btn btn-sm btn-outline-secondary"
-                >
-                  Mark as read
-                </a>
-              </div>
-            </div>
-          </div>
-          {% endfor %} {% else %}
-          <p class="text-muted text-center">No notifications yet.</p>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-  </div>
+								<small class="text-muted d-block">
+									{{ notification.timestamp|timesince }} ago
+								</small>
+							</div>
+							<div>
+								{% if not notification.is_read %}
+								<span class="badge bg-success me-2">New</span>
+								{% endif %}
+								<a
+									href="{% url 'notifications:mark_read' notification.id %}"
+									class="btn btn-sm btn-outline-secondary"
+								>
+									Mark as read
+								</a>
+							</div>
+						</div>
+					</div>
+					{% endfor %} {% else %}
+					<p class="text-muted text-center">No notifications yet.</p>
+					{% endif %}
+				</div>
+			</div>
+		</div>
+	</div>
 </div>
 {% endblock %}
