@@ -1,8 +1,10 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.utils.text import slugify
 
 from django.utils import timezone
 from datetime import timedelta
+from django.conf import settings
 
 User = get_user_model()
 
@@ -14,16 +16,42 @@ class Category(models.Model):
 
     class Meta:
         verbose_name_plural = "Categories"
+        app_label = "recipes"
+        ordering = ["-created_at"]
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            # Auto-generate from name
+            base_slug = slugify(self.name)
+            slug = base_slug
+            counter = 1
+
+            while Category.objects.filter(slug=slug).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+
+            self.slug = slug
+        else:
+            # If slug is provided manually, ensure it's unique
+            original_slug = self.slug
+            counter = 1
+            while Category.objects.filter(slug=self.slug).exclude(pk=self.pk).exists():
+                self.slug = f"{original_slug}-{counter}"
+                counter += 1
+
+        super().save(*args, **kwargs)
 
 
 class Recipe(models.Model):
     title = models.CharField(max_length=200)
     slug = models.SlugField(unique=True, blank=True)
     description = models.TextField()
-    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name="recipes")
+    creator = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="recipes"
+    )
     category = models.ForeignKey(
         Category, on_delete=models.SET_NULL, null=True, blank=True
     )
@@ -65,6 +93,11 @@ class Recipe(models.Model):
         return 0
 
     @property
+    def total_time(self):
+        """return total preparation time (prep + cook)"""
+        return self.prep_time + (self.cook_time or 0)
+
+    @property
     def rating_count(self):
         return self.ratings.count()
 
@@ -94,6 +127,9 @@ class Recipe(models.Model):
         )
 
         return score
+
+    class Meta:
+        ordering = ["-created_at"]
 
     def get_similar_recipes(self, limit=5):
         """Find similar recipes based on category and shared ingredients"""
@@ -129,6 +165,7 @@ class RecipeImage(models.Model):
 
     class Meta:
         ordering = ["order"]
+        app_label = "recipes"
 
     def __str__(self):
         return f"Image for {self.recipe.title}"
@@ -147,6 +184,7 @@ class Ingredient(models.Model):
 
     class Meta:
         ordering = ["order"]
+        app_label = "recipes"
 
     def __str__(self):
         return f"{self.quantity} {self.unit} {self.name}".strip()
@@ -162,6 +200,7 @@ class Step(models.Model):
 
     class Meta:
         ordering = ["step_number"]
+        app_label = "recipes"
 
     def __str__(self):
         return f"Step {self.step_number}"
@@ -171,13 +210,14 @@ class Comment(models.Model):
     recipe = models.ForeignKey(
         Recipe, on_delete=models.CASCADE, related_name="comments"
     )
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["-created_at"]
+        app_label = "recipes"
 
     def __str__(self):
         return f"Comment by {self.user.username} on {self.recipe.title}"
@@ -191,6 +231,7 @@ class Like(models.Model):
 
     class Meta:
         unique_together = ["recipe", "user"]  # one like per user per recipe
+        app_label = "recipes"
 
     def __str__(self):
         return f"{self.user.username} likes {self.recipe.title}"  # Add user field to Like model
@@ -205,6 +246,7 @@ class Bookmark(models.Model):
 
     class Meta:
         unique_together = ["recipe", "user"]  # one bookmark per user per recipe
+        app_label = "recipes"
 
     def __str__(self):
         return f"{self.user.username} bookmarked {self.recipe.title}"
@@ -218,8 +260,19 @@ class Rating(models.Model):
     )  # rating value (e.g., 1-5)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def clean(self):
+        from django.core.exceptions import ValidationError
+
+        if int(self.value) < 1 or int(self.value) > 5:
+            raise ValidationError("Rating must be between 1 and 5")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
     class Meta:
         unique_together = ["recipe", "user"]  # one rating per user per recipe
+        app_label = "recipes"
 
     def __str__(self):
         return f"{self.user.username} rated {self.recipe.title}: {self.value}*"
@@ -231,7 +284,7 @@ class Collection(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
     creator = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="collections"
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="collections"
     )
     is_public = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -240,6 +293,7 @@ class Collection(models.Model):
     class Meta:
         unique_together = ["name", "creator"]
         ordering = ["-created_at"]
+        app_label = "recipes"
 
     def __str__(self):
         return f"{self.name} by {self.creator.username}"
@@ -264,6 +318,7 @@ class CollectionItem(models.Model):
     class Meta:
         unique_together = ["collection", "recipe"]
         ordering = ["-added_at"]
+        app_label = "recipes"
 
     def __str__(self):
         return f"{self.recipe.title} in {self.collection.name}"

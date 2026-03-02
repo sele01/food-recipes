@@ -47,6 +47,7 @@ class RecipeListView(ListView):
     model = Recipe
     template_name = "recipes/recipe_list.html"
     context_object_name = "recipes"
+    ordering = "-created_at"
     paginate_by = 9
 
     def get_queryset(self):
@@ -252,9 +253,25 @@ def rate_recipe(request, recipe_id):
     value = request.POST.get("value")
 
     if value:
-        rating, created = Rating.objects.get_or_create(
-            recipe=recipe, user=request.user, defaults={"value": value}
-        )
+        try:
+            # Convert to integer
+            value = int(value)
+
+            # Validate range
+            if 1 <= value <= 5:
+                rating, created = Rating.objects.update_or_create(
+                    recipe=recipe, user=request.user, defaults={"value": value}
+                )
+
+                # Optional: Add success message
+                messages.success(request, f"Rating updated to {value}★")
+            else:
+                messages.error(request, "Rating must be between 1 and 5")
+
+        except (ValueError, TypeError):
+            messages.error(request, "Invalid rating value")
+    else:
+        messages.error(request, "No rating value provided")
 
     return redirect("recipes:recipe_detail", slug=recipe.slug)
 
