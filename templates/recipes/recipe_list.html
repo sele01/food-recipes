@@ -1,170 +1,226 @@
-{% extends 'base.html' %}
-
-{% block title %}Recipes - Food Recipes{% endblock %}
-
+{% extends 'base.html' %} {% block title %}Recipes - Food Recipes{% endblock %}
 {% block content %}
 <div class="row">
-    <!-- Sidebar with Search & Filters -->
-    <div class="col-md-3">
-        <div class="card mb-4">
-            <div class="card-header bg-success text-white">
-                <h5 class="mb-0">Search & Filter</h5>
-            </div>
-            <div class="card-body">
-                <form method="get" action="{% url 'recipes:recipe_list' %}">
-                    <!-- Search by title -->
-                    <div class="mb-3">
-                        <label class="form-label">Search Recipes</label>
-                        <input type="text" name="search" class="form-control" 
-                               placeholder="Search by title..." value="{{ search_query }}">
-                    </div>
-                    
-                    <!-- Filter by category -->
-                    <div class="mb-3">
-                        <label class="form-label">Category</label>
-                        <select name="category" class="form-select">
-                            <option value="">All Categories</option>
-                            {% for category in categories %}
-                            <option value="{{ category.slug }}" {% if selected_category == category.slug %}selected{% endif %}>
-                                {{ category.name }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    
-                    <!-- Filter by prep time -->
-                    <div class="mb-3">
-                        <label class="form-label">Max Prep Time (minutes)</label>
-                        <input type="number" name="max_time" class="form-control" 
-                               placeholder="e.g., 30" value="{{ max_time }}" min="1">
-                    </div>
-                    
-                    <!-- Filter by ingredient -->
-                    <div class="mb-3">
-                        <label class="form-label">Contains Ingredient</label>
-                        <input type="text" name="ingredient" class="form-control" 
-                               placeholder="e.g., garlic" value="{{ ingredient }}">
-                    </div>
-                    
-                    <button type="submit" class="btn btn-success w-100">Apply Filters</button>
-                    <a href="{% url 'recipes:recipe_list' %}" class="btn btn-outline-secondary w-100 mt-2">Clear Filters</a>
-                </form>
-            </div>
-        </div>
-        
-        <!-- Categories List (quick filter) -->
-        <div class="card mb-4">
-            <div class="card-header bg-success text-white">
-                <h5 class="mb-0">Categories</h5>
-            </div>
-            <div class="list-group list-group-flush">
-                <a href="{% url 'recipes:recipe_list' %}" class="list-group-item list-group-item-action">
-                    All Recipes
-                </a>
-                {% for category in categories %}
-                <a href="?category={{ category.slug }}" class="list-group-item list-group-item-action">
-                    {{ category.name }}
-                </a>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-    
-    <!-- Recipe Grid -->
-    <div class="col-md-9">
-        <h2 class="mb-4">
-            Recipes
-            {% if search_query or selected_category or max_time or ingredient %}
-            <small class="text-muted">(Filtered)</small>
-            {% endif %}
-        </h2>
-        
-        <!-- Active Filters Display -->
-        {% if search_query or selected_category or max_time or ingredient %}
-        <div class="alert alert-info mb-4">
-            <strong>Active Filters:</strong>
-            {% if search_query %} Search: "{{ search_query }}" {% endif %}
-            {% if selected_category %} Category: {{ selected_category }} {% endif %}
-            {% if max_time %} Max Time: {{ max_time }} mins {% endif %}
-            {% if ingredient %} Ingredient: "{{ ingredient }}" {% endif %}
-            <a href="{% url 'recipes:recipe_list' %}" class="float-end">Clear all</a>
-        </div>
-        {% endif %}
-        
-        <div class="row">
-            {% for recipe in recipes %}
-            <div class="col-md-4 mb-4">
-                <div class="card h-100">
-                    {% if recipe.featured_image %}
-                    <img src="{{ recipe.featured_image.url }}" class="card-img-top" alt="{{ recipe.title }}" style="height: 200px; object-fit: cover;">
-                    {% else %}
-                    <div class="card-img-top bg-light text-center py-5" style="height: 200px;">
-                        <i class="fas fa-utensils fa-3x text-secondary"></i>
-                    </div>
-                    {% endif %}
-                    <div class="card-body">
-                        <h5 class="card-title">{{ recipe.title }}</h5>
-                        <p class="card-text text-muted small">
-                            <i class="far fa-clock"></i> {{ recipe.prep_time }} mins
-                            {% if recipe.cook_time %} + {{ recipe.cook_time }} mins{% endif %}
-                            <br>
-                            <i class="fas fa-star text-warning"></i> {{ recipe.average_rating|floatformat:1 }} ({{ recipe.rating_count }})
-                        </p>
-                        <p class="card-text">{{ recipe.description|truncatewords:15 }}</p>
-                        <a href="{% url 'recipes:recipe_detail' recipe.slug %}" class="btn btn-success btn-sm">View Recipe</a>
-                    </div>
-                    <div class="card-footer text-muted">
-                <small>By <a href="{% url 'accounts:profile' recipe.creator.username %}" class="text-success">
-                    {{ recipe.creator.username }}
-                </a></small>
-            </div>
-                </div>
-            </div>
-            {% empty %}
-            <div class="col-12">
-                <div class="alert alert-info">
-                    No recipes found matching your criteria.
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        
-        <!-- Pagination -->
-        {% if is_paginated %}
-        <nav class="mt-4">
-            <ul class="pagination justify-content-center">
-                {% if page_obj.has_previous %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if max_time %}&max_time={{ max_time }}{% endif %}{% if ingredient %}&ingredient={{ ingredient }}{% endif %}">
-                        Previous
-                    </a>
-                </li>
-                {% endif %}
-                
-                {% for num in page_obj.paginator.page_range %}
-                {% if page_obj.number == num %}
-                <li class="page-item active">
-                    <span class="page-link">{{ num }}</span>
-                </li>
-                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if max_time %}&max_time={{ max_time }}{% endif %}{% if ingredient %}&ingredient={{ ingredient }}{% endif %}">
-                        {{ num }}
-                    </a>
-                </li>
-                {% endif %}
-                {% endfor %}
-                
-                {% if page_obj.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if max_time %}&max_time={{ max_time }}{% endif %}{% if ingredient %}&ingredient={{ ingredient }}{% endif %}">
-                        Next
-                    </a>
-                </li>
-                {% endif %}
-            </ul>
-        </nav>
-        {% endif %}
-    </div>
+	<!-- Sidebar with Search & Filters -->
+	<div class="col-md-3">
+		<div class="card mb-4">
+			<div class="card-header bg-success text-white">
+				<h5 class="mb-0">Search & Filter</h5>
+			</div>
+			<div class="card-body">
+				<form method="get" action="{% url 'recipes:recipe_list' %}">
+					<!-- Search by title -->
+					<div class="mb-3">
+						<label class="form-label">Search Recipes</label>
+						<input
+							type="text"
+							name="search"
+							class="form-control"
+							placeholder="Search by title..."
+							value="{{ search_query }}"
+						/>
+					</div>
+
+					<!-- Filter by category -->
+					<div class="mb-3">
+						<label class="form-label">Category</label>
+						<select name="category" class="form-select">
+							<option value="">All Categories</option>
+							{% for category in categories %}
+							<option
+								value="{{ category.slug }}"
+								{%
+								if
+								selected_category=""
+								="category.slug"
+								%}selected{%
+								endif
+								%}
+							>
+								{{ category.name }}
+							</option>
+							{% endfor %}
+						</select>
+					</div>
+
+					<!-- Filter by prep time -->
+					<div class="mb-3">
+						<label class="form-label">Max Prep Time (minutes)</label>
+						<input
+							type="number"
+							name="max_time"
+							class="form-control"
+							placeholder="e.g., 30"
+							value="{{ max_time }}"
+							min="1"
+						/>
+					</div>
+
+					<!-- Filter by ingredient -->
+					<div class="mb-3">
+						<label class="form-label">Contains Ingredient</label>
+						<input
+							type="text"
+							name="ingredient"
+							class="form-control"
+							placeholder="e.g., garlic"
+							value="{{ ingredient }}"
+						/>
+					</div>
+
+					<button type="submit" class="btn btn-success w-100">
+						Apply Filters
+					</button>
+					<a
+						href="{% url 'recipes:recipe_list' %}"
+						class="btn btn-outline-secondary w-100 mt-2"
+						>Clear Filters</a
+					>
+				</form>
+			</div>
+		</div>
+
+		<!-- Categories List (quick filter) -->
+		<div class="card mb-4">
+			<div class="card-header bg-success text-white">
+				<h5 class="mb-0">Categories</h5>
+			</div>
+			<div class="list-group list-group-flush">
+				<a
+					href="{% url 'recipes:recipe_list' %}"
+					class="list-group-item list-group-item-action"
+				>
+					All Recipes
+				</a>
+				{% for category in categories %}
+				<a
+					href="?category={{ category.slug }}"
+					class="list-group-item list-group-item-action"
+				>
+					{{ category.name }}
+				</a>
+				{% endfor %}
+			</div>
+		</div>
+	</div>
+
+	<!-- Recipe Grid -->
+	<div class="col-md-9">
+		<h2 class="mb-4">
+			Recipes {% if search_query or selected_category or max_time or ingredient
+			%}
+			<small class="text-muted">(Filtered)</small>
+			{% endif %}
+		</h2>
+
+		<!-- Active Filters Display -->
+		{% if search_query or selected_category or max_time or ingredient %}
+		<div class="alert alert-info mb-4">
+			<strong>Active Filters:</strong>
+			{% if search_query %} Search: "{{ search_query }}" {% endif %} {% if
+			selected_category %} Category: {{ selected_category }} {% endif %} {% if
+			max_time %} Max Time: {{ max_time }} mins {% endif %} {% if ingredient %}
+			Ingredient: "{{ ingredient }}" {% endif %}
+			<a href="{% url 'recipes:recipe_list' %}" class="float-end">Clear all</a>
+		</div>
+		{% endif %}
+
+		<div class="row">
+			{% for recipe in recipes %}
+			<div class="col-md-4 mb-4">
+				<div class="card h-100">
+					{% if recipe.featured_image %}
+					<img
+						src="https://res.cloudinary.com/{{ cloud_name }}/image/upload/w_300,h_200,c_fill/{{ recipe.featured_image }}"
+						alt="{{ recipe.title }}"
+					/>
+					{% else %}
+					<div
+						class="card-img-top bg-light text-center py-5"
+						style="height: 200px"
+					>
+						<i class="fas fa-utensils fa-3x text-secondary"></i>
+					</div>
+					{% endif %}
+					<div class="card-body">
+						<h5 class="card-title">{{ recipe.title }}</h5>
+						<p class="card-text text-muted small">
+							<i class="far fa-clock"></i> {{ recipe.prep_time }} mins {% if
+							recipe.cook_time %} + {{ recipe.cook_time }} mins{% endif %}
+							<br />
+							<i class="fas fa-star text-warning"></i> {{
+							recipe.average_rating|floatformat:1 }} ({{ recipe.rating_count }})
+						</p>
+						<p class="card-text">{{ recipe.description|truncatewords:15 }}</p>
+						<a
+							href="{% url 'recipes:recipe_detail' recipe.slug %}"
+							class="btn btn-success btn-sm"
+							>View Recipe</a
+						>
+					</div>
+					<div class="card-footer text-muted">
+						<small
+							>By
+							<a
+								href="{% url 'accounts:profile' recipe.creator.username %}"
+								class="text-success"
+							>
+								{{ recipe.creator.username }}
+							</a></small
+						>
+					</div>
+				</div>
+			</div>
+			{% empty %}
+			<div class="col-12">
+				<div class="alert alert-info">
+					No recipes found matching your criteria.
+				</div>
+			</div>
+			{% endfor %}
+		</div>
+
+		<!-- Pagination -->
+		{% if is_paginated %}
+		<nav class="mt-4">
+			<ul class="pagination justify-content-center">
+				{% if page_obj.has_previous %}
+				<li class="page-item">
+					<a
+						class="page-link"
+						href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if max_time %}&max_time={{ max_time }}{% endif %}{% if ingredient %}&ingredient={{ ingredient }}{% endif %}"
+					>
+						Previous
+					</a>
+				</li>
+				{% endif %} {% for num in page_obj.paginator.page_range %} {% if
+				page_obj.number == num %}
+				<li class="page-item active">
+					<span class="page-link">{{ num }}</span>
+				</li>
+				{% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3'
+				%}
+				<li class="page-item">
+					<a
+						class="page-link"
+						href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if max_time %}&max_time={{ max_time }}{% endif %}{% if ingredient %}&ingredient={{ ingredient }}{% endif %}"
+					>
+						{{ num }}
+					</a>
+				</li>
+				{% endif %} {% endfor %} {% if page_obj.has_next %}
+				<li class="page-item">
+					<a
+						class="page-link"
+						href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if max_time %}&max_time={{ max_time }}{% endif %}{% if ingredient %}&ingredient={{ ingredient }}{% endif %}"
+					>
+						Next
+					</a>
+				</li>
+				{% endif %}
+			</ul>
+		</nav>
+		{% endif %}
+	</div>
 </div>
 {% endblock %}
