@@ -287,27 +287,33 @@ if not os.path.exists(STATIC_ROOT):
 # ============================================
 # PRODUCTION SECURITY SETTINGS
 # ============================================
+# Tell Django it's behind a proxy
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
+SECURE_SSL_REDIRECT = False  # Don't redirect, Railway already did
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 
 # Security settings - only active when DEBUG=False
-if not DEBUG:
-    # HTTPS settings
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-    SECURE_SSL_REDIRECT = True
+# if not DEBUG:
+    # # HTTPS settings
+    # SESSION_COOKIE_SECURE = True
+    # CSRF_COOKIE_SECURE = True
+    # SECURE_SSL_REDIRECT = True
 
-    # HSTS (HTTP Strict Transport Security)
-    SECURE_HSTS_SECONDS = 31536000  # 1 year
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
+    # # HSTS (HTTP Strict Transport Security)
+    # SECURE_HSTS_SECONDS = 31536000  # 1 year
+    # SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    # SECURE_HSTS_PRELOAD = True
 
-    # Other security headers
-    SECURE_CONTENT_TYPE_NOSNIFF = True
-    SECURE_BROWSER_XSS_FILTER = True
-    X_FRAME_OPTIONS = "DENY"
+    # # Other security headers
+    # SECURE_CONTENT_TYPE_NOSNIFF = True
+    # SECURE_BROWSER_XSS_FILTER = True
+    # X_FRAME_OPTIONS = "DENY"
 
-    # Trusted origins for CSRF
-    CSRF_TRUSTED_ORIGINS = [
-        "https://*.railway.app",
-        "https://*.up.railway.app",
-        # Add your custom domain later
-    ]
+    # # Trusted origins for CSRF
+    # CSRF_TRUSTED_ORIGINS = [
+    #     "https://*.railway.app",
+    #     "https://*.up.railway.app",
+    #     # Add your custom domain later
+    # ]
