@@ -216,6 +216,11 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 # Where to collect static files for production
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
+#  Only include STATICFILES_DIRS if the directory exists
+if os.path.exists(os.path.join(BASE_DIR, "static")):
+    STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+else:
+    STATICFILES_DIRS = []
 # ============================================
 # MEDIA FILES (User Uploads)
 # ============================================
