@@ -9,6 +9,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 import dj_database_url
 
+
 # ============================================
 # ENVIRONMENT VARIABLES
 # ============================================
@@ -281,6 +282,8 @@ EMAIL_BACKEND = os.environ.get(
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "noreply@foodrecipes.com")
 
 
+if not os.path.exists(STATIC_ROOT):
+    os.makedirs(STATIC_ROOT, exist_ok=True)
 # ============================================
 # PRODUCTION SECURITY SETTINGS
 # ============================================
