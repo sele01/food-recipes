@@ -1,4 +1,6 @@
 from django.shortcuts import render, get_object_or_404
+from django.conf import settings
+
 from django.views.generic import (
     ListView,
     DetailView,
@@ -90,6 +92,8 @@ class RecipeListView(ListView):
         context["max_time"] = self.request.GET.get("max_time", "")
         context["ingredient"] = self.request.GET.get("ingredient", "")
 
+        context["cloud_name"] = settings.CLOUDINARY_STORAGE["CLOUD_NAME"]
+
         return context
 
 
@@ -119,6 +123,8 @@ class RecipeDetailView(DetailView):
             context["user_liked"] = False
             context["user_bookmarked"] = False
             context["user_rating"] = None
+
+        context["cloud_name"] = settings.CLOUDINARY_STORAGE["CLOUD_NAME"]
 
         # Add this similar recipes
         context["similar_recipes"] = recipe.get_similar_recipes()

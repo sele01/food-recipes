@@ -178,7 +178,7 @@ class Ingredient(models.Model):
         Recipe, on_delete=models.CASCADE, related_name="ingredients"
     )
     name = models.CharField(max_length=200)
-    quantity = models.CharField(max_length=100)
+    quantity = models.CharField(max_length=100, blank=True)
     unit = models.CharField(max_length=50, blank=True)
     order = models.IntegerField(default=0)
 

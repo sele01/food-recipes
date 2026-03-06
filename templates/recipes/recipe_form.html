@@ -1,5 +1,9 @@
-{% extends 'base.html' %} {% load crispy_forms_tags %} {% block title %}Create
-Recipe - Food Recipes{% endblock %} {% block content %}
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Create Recipe - Food Recipes{% endblock %}
+
+{% block content %}
 <div class="container mt-4">
   <div class="row justify-content-center">
     <div class="col-md-10">
@@ -22,71 +26,48 @@ Recipe - Food Recipes{% endblock %} {% block content %}
             {{ ingredient_formset.management_form }}
             <div id="ingredient-forms">
               {% for form in ingredient_formset %}
-              <div class="ingredient-form row mb-2">
-                {% for hidden in form.hidden_fields %} {{ hidden }} {% endfor %}
-                <div class="col-md-4">
-                  <input
-                    type="text"
-                    name="{{ form.name.html_name }}"
-                    class="form-control"
-                    placeholder="Name"
-                    value="{{ form.name.value|default:'' }}"
-                  />
-                </div>
+              <div class="ingredient-form row mb-2 align-items-center">
+                {% for hidden in form.hidden_fields %}
+                  {{ hidden }}
+                {% endfor %}
+                
                 <div class="col-md-3">
-                  <input
-                    type="text"
-                    name="{{ form.quantity.html_name }}"
-                    class="form-control"
-                    placeholder="Quantity"
-                    value="{{ form.quantity.value|default:'' }}"
-                  />
-                </div>
-                <div class="col-md-3">
-                  <input
-                    type="text"
-                    name="{{ form.unit.html_name }}"
-                    class="form-control"
-                    placeholder="Unit"
-                    value="{{ form.unit.value|default:'' }}"
-                  />
+                  <input type="text" name="{{ form.name.html_name }}" 
+                         class="form-control" placeholder="Name" 
+                         value="{{ form.name.value|default:'' }}">
                 </div>
                 <div class="col-md-2">
+                  <input type="text" name="{{ form.quantity.html_name }}" 
+                         class="form-control" placeholder="Qty" 
+                         value="{{ form.quantity.value|default:'' }}">
+                </div>
+                <div class="col-md-2">
+                  <input type="text" name="{{ form.unit.html_name }}" 
+                         class="form-control" placeholder="Unit" 
+                         value="{{ form.unit.value|default:'' }}">
+                </div>
+                <div class="col-md-3">
                   {% if form.instance.pk %}
-                  <button
-                    type="button"
-                    class="btn btn-danger btn-sm remove-form"
-                    onclick="removeForm(this)"
-                  >
-                    Remove
-                  </button>
+                    <!-- Existing ingredient: DELETE checkbox -->
+                    <div class="form-check">
+                      <input type="checkbox" name="{{ form.DELETE.html_name }}" 
+                             class="form-check-input" id="del_{{ form.prefix }}">
+                      <label class="form-check-label text-danger" for="del_{{ form.prefix }}">
+                        Delete
+                      </label>
+                    </div>
                   {% else %}
-                  <button
-                    type="button"
-                    class="btn btn-danger btn-sm remove-form"
-                    onclick="removeForm(this)"
-                  >
-                    Remove
-                  </button>
+                    <!-- New ingredient: Remove button -->
+                    <button type="button" class="btn btn-danger btn-sm remove-ingredient">
+                      Remove
+                    </button>
                   {% endif %}
                 </div>
               </div>
-              {% if form.instance.pk %}
-    <div class="col-md-1">
-        <label class="text-danger">
-            <input type="checkbox" name="{{ form.DELETE.html_name }}" class="form-check-input">
-            Delete
-        </label>
-    </div>
-{% endif %}
               {% endfor %}
             </div>
-            <button
-              type="button"
-              class="btn btn-sm btn-outline-success mb-4"
-              id="add-ingredient"
-              onclick="addIngredient()"
-            >
+            
+            <button type="button" class="btn btn-sm btn-outline-success mb-4" id="add-ingredient">
               <i class="fas fa-plus"></i> Add Ingredient
             </button>
 
@@ -97,54 +78,43 @@ Recipe - Food Recipes{% endblock %} {% block content %}
             {{ step_formset.management_form }}
             <div id="step-forms">
               {% for form in step_formset %}
-              <div class="step-form row mb-2">
-                {% for hidden in form.hidden_fields %} {{ hidden }} {% endfor %}
-                <div class="col-md-2">
-                  <input
-                    type="number"
-                    name="{{ form.step_number.html_name }}"
-                    class="form-control"
-                    placeholder="Step #"
-                    value="{{ form.step_number.value|default:'' }}"
-                  />
-                </div>
-                <div class="col-md-9">
-                  <textarea
-                    name="{{ form.description.html_name }}"
-                    class="form-control"
-                    rows="2"
-                    placeholder="Description"
-                  >
-{{ form.description.value|default:'' }}</textarea
-                  >
-                </div>
+              <div class="step-form row mb-2 align-items-center">
+                {% for hidden in form.hidden_fields %}
+                  {{ hidden }}
+                {% endfor %}
+                
                 <div class="col-md-1">
-                  <button
-                    type="button"
-                    class="btn btn-danger btn-sm remove-form"
-                    onclick="removeForm(this)"
-                  >
-                    ×
-                  </button>
+                  <input type="number" name="{{ form.step_number.html_name }}" 
+                         class="form-control" placeholder="#" 
+                         value="{{ form.step_number.value|default:'' }}">
+                </div>
+                <div class="col-md-8">
+                  <textarea name="{{ form.description.html_name }}" 
+                            class="form-control" rows="2" 
+                            placeholder="Description">{{ form.description.value|default:'' }}</textarea>
+                </div>
+                <div class="col-md-2">
+                  {% if form.instance.pk %}
+                    <!-- Existing step: DELETE checkbox -->
+                    <div class="form-check">
+                      <input type="checkbox" name="{{ form.DELETE.html_name }}" 
+                             class="form-check-input" id="del_step_{{ form.prefix }}">
+                      <label class="form-check-label text-danger" for="del_step_{{ form.prefix }}">
+                        Delete
+                      </label>
+                    </div>
+                  {% else %}
+                    <!-- New step: Remove button -->
+                    <button type="button" class="btn btn-danger btn-sm remove-step">
+                      Remove
+                    </button>
+                  {% endif %}
                 </div>
               </div>
-              {% if form.instance.pk %}
-    <div class="col-md-1">
-        <label class="text-danger">
-            <input type="checkbox" name="{{ form.DELETE.html_name }}" class="form-check-input">
-            Delete
-        </label>
-    </div>
-{% endif %}
               {% endfor %}
             </div>
             
-            <button
-              type="button"
-              class="btn btn-sm btn-outline-success mb-4"
-              id="add-step"
-              onclick="addStep()"
-            >
+            <button type="button" class="btn btn-sm btn-outline-success mb-4" id="add-step">
               <i class="fas fa-plus"></i> Add Step
             </button>
 
@@ -155,11 +125,8 @@ Recipe - Food Recipes{% endblock %} {% block content %}
               <button type="submit" class="btn btn-success btn-lg px-5">
                 Save Recipe
               </button>
-              <a
-                href="{% url 'recipes:recipe_list' %}"
-                class="btn btn-outline-secondary btn-lg px-5"
-                >Cancel</a
-              >
+              <a href="{% url 'recipes:recipe_list' %}" 
+                 class="btn btn-outline-secondary btn-lg px-5">Cancel</a>
             </div>
           </form>
         </div>
@@ -169,89 +136,112 @@ Recipe - Food Recipes{% endblock %} {% block content %}
 </div>
 
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", function() {
+    
+    // ===== INGREDIENT FUNCTIONS =====
+    
+    // Remove ingredient button
+    document.addEventListener("click", function(e) {
+        if (e.target.classList.contains("remove-ingredient")) {
+            e.preventDefault();
+            var form = e.target.closest(".ingredient-form");
+            if (form && form.parentElement.children.length > 1) {
+                form.remove();
+                updateIngredientCount();
+            }
+        }
+    });
+    
     // Add ingredient
-    document
-      .getElementById("add-ingredient")
-      .addEventListener("click", function () {
+    document.getElementById("add-ingredient").addEventListener("click", function() {
         var forms = document.getElementById("ingredient-forms");
         var totalForms = document.getElementById("id_ingredients-TOTAL_FORMS");
         var formNum = forms.children.length;
+        
+        // Clone the first ingredient form
         var newForm = forms.children[0].cloneNode(true);
-
-        // Update form index
-        newForm.innerHTML = newForm.innerHTML.replace(
-          /ingredients-0-/g,
-          "ingredients-" + formNum + "-",
-        );
-        newForm.innerHTML = newForm.innerHTML.replace(
-          /ingredients-0\]/g,
-          "ingredients-" + formNum + "]",
-        );
-
-        // Clear input values
-        var inputs = newForm.querySelectorAll("input");
-        inputs.forEach(function (input) {
-          if (input.type !== "button") {
+        
+        // Update all name attributes with new index
+        var html = newForm.innerHTML;
+        html = html.replace(/ingredients-0-/g, "ingredients-" + formNum + "-");
+        html = html.replace(/ingredients-0\]/g, "ingredients-" + formNum + "]");
+        newForm.innerHTML = html;
+        
+        // Clear all input values
+        var inputs = newForm.querySelectorAll("input[type='text']");
+        inputs.forEach(function(input) {
             input.value = "";
-          }
         });
-
+        
+        // Make sure remove button works on new form
+        var removeBtn = newForm.querySelector(".remove-ingredient");
+        if (removeBtn) {
+            removeBtn.classList.add("remove-ingredient");
+        }
+        
         forms.appendChild(newForm);
         totalForms.value = formNum + 1;
-      });
-
+    });
+    
+    function updateIngredientCount() {
+        var totalForms = document.getElementById("id_ingredients-TOTAL_FORMS");
+        totalForms.value = document.getElementById("ingredient-forms").children.length;
+    }
+    
+    // ===== STEP FUNCTIONS =====
+    
+    // Remove step button
+    document.addEventListener("click", function(e) {
+        if (e.target.classList.contains("remove-step")) {
+            e.preventDefault();
+            var form = e.target.closest(".step-form");
+            if (form && form.parentElement.children.length > 1) {
+                form.remove();
+                updateStepCount();
+            }
+        }
+    });
+    
     // Add step
-    document.getElementById("add-step").addEventListener("click", function () {
-      var forms = document.getElementById("step-forms");
-      var totalForms = document.getElementById("id_steps-TOTAL_FORMS");
-      var formNum = forms.children.length;
-      var newForm = forms.children[0].cloneNode(true);
-
-      // Update form index
-      newForm.innerHTML = newForm.innerHTML.replace(
-        /steps-0-/g,
-        "steps-" + formNum + "-",
-      );
-      newForm.innerHTML = newForm.innerHTML.replace(
-        /steps-0\]/g,
-        "steps-" + formNum + "]",
-      );
-
-      // Clear input values
-      var inputs = newForm.querySelectorAll("input, textarea");
-      inputs.forEach(function (input) {
-        if (input.type !== "button") {
-          input.value = "";
+    document.getElementById("add-step").addEventListener("click", function() {
+        var forms = document.getElementById("step-forms");
+        var totalForms = document.getElementById("id_steps-TOTAL_FORMS");
+        var formNum = forms.children.length;
+        
+        // Clone the first step form
+        var newForm = forms.children[0].cloneNode(true);
+        
+        // Update all name attributes with new index
+        var html = newForm.innerHTML;
+        html = html.replace(/steps-0-/g, "steps-" + formNum + "-");
+        html = html.replace(/steps-0\]/g, "steps-" + formNum + "]");
+        newForm.innerHTML = html;
+        
+        // Clear input values
+        var inputs = newForm.querySelectorAll("input[type='number']");
+        inputs.forEach(function(input) {
+            input.value = "";
+        });
+        var textareas = newForm.querySelectorAll("textarea");
+        textareas.forEach(function(textarea) {
+            textarea.value = "";
+        });
+        
+        // Make sure remove button works on new form
+        var removeBtn = newForm.querySelector(".remove-step");
+        if (removeBtn) {
+            removeBtn.classList.add("remove-step");
         }
-      });
-
-      forms.appendChild(newForm);
-      totalForms.value = formNum + 1;
+        
+        forms.appendChild(newForm);
+        totalForms.value = formNum + 1;
     });
-
-    // Remove form
-    document.addEventListener("click", function (e) {
-      if (e.target.classList.contains("remove-form")) {
-        var form = e.target.closest(".ingredient-form, .step-form");
-        if (form && form.parentElement.children.length > 1) {
-          form.remove();
-
-          // Update total forms
-          if (form.classList.contains("ingredient-form")) {
-            var totalForms = document.getElementById(
-              "id_ingredients-TOTAL_FORMS",
-            );
-            totalForms.value =
-              document.getElementById("ingredient-forms").children.length;
-          } else {
-            var totalForms = document.getElementById("id_steps-TOTAL_FORMS");
-            totalForms.value =
-              document.getElementById("step-forms").children.length;
-          }
-        }
-      }
-    });
-  });
+    
+    function updateStepCount() {
+        var totalForms = document.getElementById("id_steps-TOTAL_FORMS");
+        totalForms.value = document.getElementById("step-forms").children.length;
+    }
+    
+});
 </script>
 {% endblock %}

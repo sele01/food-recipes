@@ -30,7 +30,9 @@
     </p>
             
         {% if recipe.featured_image %}
-        <img src="{{ recipe.featured_image.url }}" class="img-fluid rounded mb-4" alt="{{ recipe.title }}">
+        <img src="https://res.cloudinary.com/{{ cloud_name }}/image/upload/w_300,h_200,c_fill/{{ recipe.featured_image }}"
+                         class="card-img-top" alt="{{ recipe.title }}" style="height: 200px;width: 300px; object-fit: cover;">
+        {% comment %} <img src="{{ recipe.featured_image.url }}" class="img-fluid rounded mb-4" alt="{{ recipe.title }}"> {% endcomment %}
         {% endif %}
         
         <div class="card mb-4">
