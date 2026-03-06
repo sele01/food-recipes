@@ -7,6 +7,7 @@ import os
 import sys
 from pathlib import Path
 from dotenv import load_dotenv
+import dj_database_url
 
 # ============================================
 # ENVIRONMENT VARIABLES
@@ -115,6 +116,7 @@ AUTH_USER_MODEL = "accounts.CustomUser"
 MIDDLEWARE = [
     "debug_toolbar.middleware.DebugToolbarMiddleware",  # Debug toolbar
     "django.middleware.security.SecurityMiddleware",  # Security enhancements
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",  # Session management
     "django.middleware.common.CommonMiddleware",  # Common utilities
     "django.middleware.csrf.CsrfViewMiddleware",  # CSRF protection
@@ -163,7 +165,7 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 # Parse database URL from environment variable
 # Defaults to SQLite for development
-import dj_database_url
+# import dj_database_url
 
 DATABASES = {
     "default": dj_database_url.config(
@@ -176,21 +178,21 @@ DATABASES = {
 # PASSWORD VALIDATION
 # ============================================
 
-AUTH_PASSWORD_VALIDATORS = []
-# AUTH_PASSWORD_VALIDATORS = [
-#     {
-#         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
-#     },
-#     {
-#         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-#     },
-#     {
-#         "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-#     },
-#     {
-#         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-#     },
-# ]
+# AUTH_PASSWORD_VALIDATORS = []
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+    },
+]
 
 # ============================================
 # INTERNATIONALIZATION
@@ -261,6 +263,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Only show debug toolbar to these IPs
 INTERNAL_IPS = ["127.0.0.1"]
 
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
 # ============================================
 # EMAIL SETTINGS
 # ============================================
@@ -270,3 +274,32 @@ EMAIL_BACKEND = os.environ.get(
     "EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend"
 )
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "noreply@foodrecipes.com")
+
+
+# ============================================
+# PRODUCTION SECURITY SETTINGS
+# ============================================
+
+# Security settings - only active when DEBUG=False
+if not DEBUG:
+    # HTTPS settings
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT = True
+
+    # HSTS (HTTP Strict Transport Security)
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+
+    # Other security headers
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_BROWSER_XSS_FILTER = True
+    X_FRAME_OPTIONS = "DENY"
+
+    # Trusted origins for CSRF
+    CSRF_TRUSTED_ORIGINS = [
+        "https://*.railway.app",
+        "https://*.up.railway.app",
+        # Add your custom domain later
+    ]
