@@ -294,6 +294,9 @@ SECURE_SSL_REDIRECT = False  # Don't redirect, Railway already did
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 
+
+SESSION_COOKIE_DOMAIN = ".railway.app"
+CSRF_COOKIE_DOMAIN = ".railway.app"
 # Security settings - only active when DEBUG=False
 # Security settings - only active when DEBUG=False
 if not DEBUG:
