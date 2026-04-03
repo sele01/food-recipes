@@ -299,27 +299,27 @@ SESSION_COOKIE_DOMAIN = ".railway.app"
 CSRF_COOKIE_DOMAIN = ".railway.app"
 
 
-# # Security settings - only active when DEBUG=False
-# # Security settings - only active when DEBUG=False
-# if not DEBUG:
-#     # HTTPS settings
-#     SESSION_COOKIE_SECURE = True
-#     CSRF_COOKIE_SECURE = True
-#     SECURE_SSL_REDIRECT = True
+# Security settings - only active when DEBUG=False
+# Security settings - only active when DEBUG=False
+if not DEBUG:
+    # HTTPS settings
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT = True
 
-#     # HSTS (HTTP Strict Transport Security)
-#     SECURE_HSTS_SECONDS = 31536000  # 1 year
-#     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-#     SECURE_HSTS_PRELOAD = True
+    # HSTS (HTTP Strict Transport Security)
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
 
-#     # Other security headers
-#     SECURE_CONTENT_TYPE_NOSNIFF = True
-#     SECURE_BROWSER_XSS_FILTER = True
-#     X_FRAME_OPTIONS = "DENY"
+    # Other security headers
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_BROWSER_XSS_FILTER = True
+    X_FRAME_OPTIONS = "DENY"
 
-#     # Trusted origins for CSRF
-#     CSRF_TRUSTED_ORIGINS = [
-#         "https://*.railway.app",
-#         "https://*.up.railway.app",
-#         "https://food-recipes-production.up.railway.app",
-#     ]  # domain name
+    # Trusted origins for CSRF
+    CSRF_TRUSTED_ORIGINS = [
+        "https://*.railway.app",
+        "https://*.up.railway.app",
+        "https://food-recipes-production.up.railway.app",
+    ]  # domain name
