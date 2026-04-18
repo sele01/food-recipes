@@ -37,11 +37,11 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-fallback-key")
 # SECURITY WARNING: don't run with debug turned on in production!
 # True shows detailed error pages (development only)
 # False shows generic 500 errors (production)
-DEBUG = os.environ.get("DEBUG", "True") == "True"
+DEBUG = os.environ.get("DEBUG", "False") == "True"
 
 # Which hosts/domains can serve this application
 # Prevents HTTP Host header attacks
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1", "food-recipes-rouge.vercel.app").split(",")
 
 # ============================================
 # APPLICATION DEFINITION
