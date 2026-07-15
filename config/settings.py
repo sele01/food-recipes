@@ -41,7 +41,7 @@ DEBUG = os.environ.get("DEBUG", "False") == "True"
 
 # Which hosts/domains can serve this application
 # Prevents HTTP Host header attacks
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1,.vercel.app").split(",")
 
 # ============================================
 # APPLICATION DEFINITION
