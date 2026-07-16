@@ -50,7 +50,7 @@
         {% for recipe in featured_recipes %}
         <div class="col-md-4 mb-4">
             <div class="card h-100 shadow-sm">
-                {% if recipe.featured_image %}
+                {% if recipe.featured_image and recipe.featured_image.url %}
                     <img src="{{ recipe.featured_image.url }}" class="card-img-top" alt="{{ recipe.title }}" style="height: 200px; object-fit: cover;">
                 {% else %}
                     <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
