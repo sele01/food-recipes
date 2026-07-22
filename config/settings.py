@@ -61,7 +61,6 @@ INSTALLED_APPS = [
     "crispy_bootstrap5",  # Bootstrap 5 for crispy
     "allauth",  # Authentication
     "allauth.account",  # Account management
-    "allauth.socialaccount",  # Social auth (optional)
     "debug_toolbar",  # Debugging tool
     # Cloudinary (add these two)
     "cloudinary",
@@ -71,6 +70,12 @@ INSTALLED_APPS = [
     "apps.recipes",  # Main recipe functionality
     "apps.core",  # Homepage and shared views
     "apps.notifications",  # Activity feed and notifications
+
+    # social login apps
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
+    'allauth.socialaccount.providers.github',
+
 ]
 
 # ============================================
@@ -87,21 +92,6 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 # Site ID is required by django.contrib.sites
 SITE_ID = 1
 
-# Authentication backends - how users log in
-AUTHENTICATION_BACKENDS = [
-    "django.contrib.auth.backends.ModelBackend",  # Default Django auth
-    "allauth.account.auth_backends.AuthenticationBackend",  # Allauth auth
-]
-
-# Allauth settings
-ACCOUNT_EMAIL_REQUIRED = True  # Email is required
-ACCOUNT_USERNAME_REQUIRED = True  # Username is required
-ACCOUNT_AUTHENTICATION_METHOD = "username_email"  # Can login with username OR email
-ACCOUNT_EMAIL_VERIFICATION = (
-    "optional"  # Email verification (set to 'mandatory' for production)
-)
-LOGIN_REDIRECT_URL = "/"  # Where to go after login
-LOGOUT_REDIRECT_URL = "/"  # Where to go after logout
 
 # ============================================
 # CUSTOM USER MODEL
@@ -330,3 +320,61 @@ else:
     SECURE_BROWSER_XSS_FILTER = False
     X_FRAME_OPTIONS = "SAMEORIGIN"   # Less strict for local dev
     CSRF_TRUSTED_ORIGINS = []
+
+
+# ============================================
+# EMAIL VERIFICATION (django-allauth)
+# ============================================
+
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
+ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 3
+ACCOUNT_EMAIL_CONFIRMATION_AUTHENTICATED_REDIRECT_URL = '/'
+ACCOUNT_EMAIL_CONFIRMATION_ANONYMOUS_REDIRECT_URL = '/accounts/login/'
+ACCOUNT_EMAIL_SUBJECT_PREFIX = '[Food Recipes] '
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_USERNAME_MIN_LENGTH = 1
+
+SOCIALACCOUNT_EMAIL_VERIFICATION = 'optional'
+SOCIALACCOUNT_QUERY_EMAIL = True
+SOCIALACCOUNT_AUTO_SIGNUP = True
+
+# Email Backend (for development)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'noreply@foodrecipes.com'
+
+
+
+# Authentication backends - how users log in
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",  # Default Django auth
+    "allauth.account.auth_backends.AuthenticationBackend",  # Allauth auth
+]
+
+
+LOGIN_REDIRECT_URL = "/"  # Where to go after login
+LOGOUT_REDIRECT_URL = "/"  # Where to go after logout
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'APP': {
+            'client_id': os.environ.get('GOOGLE_CLIENT_ID'),
+            'secret': os.environ.get('GOOGLE_CLIENT_SECRET'),
+        },
+        'SCOPE': ['profile', 'email'],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+            'prompt': 'select_account',  # ← ADD THIS
+        },
+    },
+    'github': {
+        'APP': {
+            'client_id': os.environ.get('GITHUB_CLIENT_ID'),
+            'secret': os.environ.get('GITHUB_CLIENT_SECRET'),
+        },
+        'SCOPE': ['user:email'],
+    }
+}
+

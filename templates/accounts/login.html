@@ -1,5 +1,6 @@
 {% extends "account/base.html" %}
 {% load crispy_forms_tags %}
+{% load socialaccount %}  <!-- ← ADD THIS -->
 
 {% block account_content %}
 <h2 class="text-center mb-4">Log In</h2>
@@ -8,7 +9,31 @@
     {{ form|crispy }}
     <button type="submit" class="btn btn-success w-100">Log In</button>
 </form>
+
+
+<div class="text-center">
+    <p>Or sign in with:</p>
+   
+    <a href="{% provider_login_url 'github' %}" class="btn btn-outline-dark">
+        <i class="fab fa-github"></i> GitHub
+    </a>
+
+     <a href="{% provider_login_url 'google' %}" class="btn btn-outline-danger">
+        <i class="fab fa-google"></i> Google
+    </a>
+</div>
+
+
+<p class="text-center mt-3">
+    <a href="{% url 'account_email_verification_sent' %}">Resend verification email</a>
+</p>
+
 <p class="text-center mt-3">
     Don't have an account? <a href="{% url 'account_signup' %}">Sign up</a>
 </p>
+
+<p class="text-center mt-2">
+    <a href="{% url 'account_reset_password' %}">Forgot your password?</a>
+</p>
+
 {% endblock %}
